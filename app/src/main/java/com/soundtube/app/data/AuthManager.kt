@@ -59,18 +59,23 @@ object AuthManager {
         appContext = context.applicationContext
         if (prefs == null) {
             prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val savedLoggedIn = prefs?.getBoolean(KEY_IS_LOGGED_IN, false) ?: false
             val cookiesPresent = checkYouTubeCookies()
-            _isLoggedIn.value = savedLoggedIn || cookiesPresent
+            _isLoggedIn.value = cookiesPresent
 
-            val savedName = prefs?.getString(KEY_USER_NAME, null)
-            val savedAvatar = prefs?.getString(KEY_USER_AVATAR, null)
-            _userName.value = savedName ?: "Tài khoản YouTube"
-            _userAvatar.value = savedAvatar
+            if (cookiesPresent) {
+                val savedName = prefs?.getString(KEY_USER_NAME, null)
+                val savedAvatar = prefs?.getString(KEY_USER_AVATAR, null)
+                _userName.value = savedName ?: "Tài khoản YouTube"
+                _userAvatar.value = savedAvatar
 
-            // Nếu đã đăng nhập nhưng chưa có tên thật hoặc avatar, tự động fetch profile ngay
-            if (_isLoggedIn.value && (savedName == null || savedName == "Người dùng YouTube" || savedName == "Tài khoản YouTube" || savedAvatar.isNullOrBlank())) {
-                fetchUserProfile(context)
+                // Nếu đã đăng nhập nhưng chưa có tên thật hoặc avatar, tự động fetch profile ngay
+                if (savedName == null || savedName == "Người dùng YouTube" || savedName == "Tài khoản YouTube" || savedAvatar.isNullOrBlank()) {
+                    fetchUserProfile(context)
+                }
+            } else {
+                _userName.value = "Người dùng"
+                _userAvatar.value = null
+                prefs?.edit()?.putBoolean(KEY_IS_LOGGED_IN, false)?.apply()
             }
         }
     }
@@ -95,6 +100,9 @@ object AuthManager {
             if (currentName == null || currentName == "Người dùng" || currentName == "Người dùng YouTube" || currentName == "Tài khoản YouTube" || currentAvatar.isNullOrBlank()) {
                 fetchUserProfile(appContext)
             }
+        } else {
+            _isLoggedIn.value = false
+            prefs?.edit()?.putBoolean(KEY_IS_LOGGED_IN, false)?.apply()
         }
         return hasLoginCookie
     }

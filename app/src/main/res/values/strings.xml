@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Nyx</string>
+    <string name="app_name">QuarkTube</string>
     <string name="search_hint">Tìm kiếm bài hát, nghệ sĩ trên YouTube…</string>
     <string name="now_playing">Đang phát</string>
-    <string name="notification_channel_name">Nyx Audio Playback</string>
+    <string name="notification_channel_name">QuarkTube Audio Playback</string>
     <string name="notification_channel_desc">Phát âm thanh khi tắt màn hình điện thoại</string>
 </resources>

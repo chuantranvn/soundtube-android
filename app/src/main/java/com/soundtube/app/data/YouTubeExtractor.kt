@@ -679,6 +679,10 @@ object YouTubeExtractor {
             val cookies = getYouTubeCookie() ?: return@withContext emptyList()
             val sapisidRegex = Regex("(?:__Secure-3PAPISID|__Secure-1PAPISID|SAPISID)=([^;\\s]+)")
             val sapisid = sapisidRegex.find(cookies)?.groupValues?.get(1)?.trim()
+            if (sapisid.isNullOrBlank()) {
+                Log.w(TAG, "Cannot fetch YouTube Watch History: SAPISID not found in cookies (user not authenticated)")
+                return@withContext emptyList()
+            }
 
             val jsonPayload = JSONObject().apply {
                 put("context", JSONObject().apply {

@@ -107,7 +107,10 @@ fun YouScreen(
                     AsyncImage(
                         model = userAvatar,
                         contentDescription = "Avatar",
-                        modifier = Modifier.fillMaxSize()
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
                     )
                 } else {
                     Icon(

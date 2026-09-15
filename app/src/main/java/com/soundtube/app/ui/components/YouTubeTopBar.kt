@@ -1,7 +1,10 @@
 package com.soundtube.app.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.res.painterResource
+import com.soundtube.app.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -52,31 +55,23 @@ fun YouTubeTopBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Logo YouTube (Icon Play đỏ + Chữ YouTube)
+        // Logo QuarkTube (Icon QuarkTube tròn 3D + Chữ QuarkTube)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.clickable(onClick = {})
         ) {
-            // Biểu tượng nút Play đỏ bo góc chuẩn thương hiệu YouTube
-            Box(
-                contentAlignment = Alignment.Center,
+            Image(
+                painter = painterResource(id = R.drawable.ic_quarktube_logo),
+                contentDescription = "QuarkTube",
                 modifier = Modifier
-                    .size(width = 30.dp, height = 22.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(Color(0xFFFF0000))
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.PlayArrow,
-                    contentDescription = "YouTube",
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
+                    .size(28.dp)
+                    .clip(CircleShape)
+            )
 
-            Spacer(modifier = Modifier.width(5.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
             Text(
-                text = "YouTube",
+                text = "QuarkTube",
                 color = TextPrimary,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
