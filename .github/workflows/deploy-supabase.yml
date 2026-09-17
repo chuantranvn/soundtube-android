@@ -1,10 +1,13 @@
-name: Build & Deploy APK to Supabase
+name: Build & Deploy APK (Supabase & GitHub Releases)
 
 on:
   push:
     branches: [ "main" ]
     tags: [ "v*" ]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-and-upload:
@@ -29,30 +32,42 @@ jobs:
       - name: Build Release APK
         run: ./gradlew assembleRelease --no-daemon
 
-      - name: Verify APK Signature
+      - name: Prepare Version Info & Artifacts
         run: |
           APK_PATH="app/build/outputs/apk/release/QuarkTube-release.apk"
           if [ ! -f "$APK_PATH" ]; then
             echo "Error: Release APK not found at $APK_PATH"
             exit 1
           fi
-          echo "Release APK found: $(ls -lh $APK_PATH)"
+
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          # Lấy ngày giờ theo múi giờ Việt Nam (GMT+7)
+          BUILD_DATE=$(TZ='Asia/Ho_Chi_Minh' date +'%Y-%m-%d_%Hh%M')
+          VERSIONED_NAME="QuarkTube-${BUILD_DATE}-${SHORT_SHA}.apk"
+
+          # Tạo thêm bản sao có tên kèm ngày giờ và commit SHA
+          cp "$APK_PATH" "app/build/outputs/apk/release/${VERSIONED_NAME}"
+
+          echo "APK_PATH=$APK_PATH" >> $GITHUB_ENV
+          echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
+          echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
+          echo "VERSIONED_NAME=$VERSIONED_NAME" >> $GITHUB_ENV
+          echo "APK_SIZE=$(du -h $APK_PATH | cut -f1)" >> $GITHUB_ENV
+
+          echo "Release APK: $(ls -lh $APK_PATH)"
+          echo "Versioned APK: $(ls -lh app/build/outputs/apk/release/${VERSIONED_NAME})"
 
       - name: Upload to Supabase Storage
+        continue-on-error: true
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_BUCKET: ${{ secrets.SUPABASE_BUCKET }}
         run: |
           if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ] || [ -z "$SUPABASE_BUCKET" ]; then
-            echo "::error::Missing Supabase secrets. Please configure SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and SUPABASE_BUCKET in repository Secrets."
-            exit 1
+            echo "::warning::Missing Supabase secrets (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_BUCKET). Skipping Supabase upload."
+            exit 0
           fi
-
-          APK_PATH="app/build/outputs/apk/release/QuarkTube-release.apk"
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          # Lấy ngày giờ theo múi giờ Việt Nam (GMT+7)
-          BUILD_DATE=$(TZ='Asia/Ho_Chi_Minh' date +'%Y-%m-%d_%Hh%M')
 
           # 1. Upload file cố định luôn là bản mới nhất
           echo "Uploading QuarkTube-release.apk to Supabase..."
@@ -67,32 +82,78 @@ jobs:
           BODY=$(echo "$RESPONSE_LATEST" | sed '$d')
 
           if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
-            echo "::error::Upload failed with HTTP $HTTP_CODE: $BODY"
+            echo "::error::Upload latest to Supabase failed with HTTP $HTTP_CODE: $BODY"
             exit 1
           fi
           echo "Upload QuarkTube-release.apk succeeded: $BODY"
 
           # 2. Upload file có ngày tháng giờ theo dạng: QuarkTube-2026-09-17_10h35-3e8db85.apk
-          VERSIONED_NAME="QuarkTube-${BUILD_DATE}-${SHORT_SHA}.apk"
           echo "Uploading $VERSIONED_NAME to Supabase..."
-          curl -s -X POST \
+          RESPONSE_VER=$(curl -s -w "\n%{http_code}" -X POST \
             "${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${VERSIONED_NAME}" \
             -H "Authorization: Bearer ${SUPABASE_KEY}" \
             -H "Content-Type: application/vnd.android.package-archive" \
             -H "x-upsert: true" \
-            --data-binary "@${APK_PATH}"
+            --data-binary "@${APK_PATH}")
 
-          # In link download ra trang kết quả Actions
+          HTTP_CODE_VER=$(echo "$RESPONSE_VER" | tail -n1)
+          BODY_VER=$(echo "$RESPONSE_VER" | sed '$d')
+
+          if [ "$HTTP_CODE_VER" -lt 200 ] || [ "$HTTP_CODE_VER" -ge 300 ]; then
+            echo "::error::Upload versioned to Supabase failed with HTTP $HTTP_CODE_VER: $BODY_VER"
+            exit 1
+          fi
+          echo "Upload $VERSIONED_NAME succeeded: $BODY_VER"
+
+          # In link download Supabase ra trang kết quả Actions
           PUBLIC_URL="${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/QuarkTube-release.apk"
-          echo "### 🚀 APK Uploaded to Supabase Successfully!" >> $GITHUB_STEP_SUMMARY
+          PUBLIC_VER_URL="${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${VERSIONED_NAME}"
+          echo "### 🚀 APK Uploaded to Supabase Storage Successfully!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Direct Download URL (Latest):** [Download QuarkTube-release.apk](${PUBLIC_URL})" >> $GITHUB_STEP_SUMMARY
-          echo "- **Versioned File:** \`${VERSIONED_NAME}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Size:** $(du -h $APK_PATH | cut -f1)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Versioned Download URL:** [Download ${VERSIONED_NAME}](${PUBLIC_VER_URL})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Size:** ${APK_SIZE}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && format('QuarkTube {0}', github.ref_name) || 'QuarkTube (Latest Release)' }}
+          body: |
+            ## 📱 QuarkTube Android APK Release
+
+            - **Phiên bản:** ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'Latest Build' }}
+            - **Thời gian build:** ${{ env.BUILD_DATE }} (GMT+7)
+            - **Commit:** `${{ github.sha }}`
+            - **Dung lượng:** `${{ env.APK_SIZE }}`
+
+            ### 📦 Danh sách file đính kèm:
+            1. **`QuarkTube-release.apk`**: Bản phát hành mới nhất (luôn cập nhật).
+            2. **`${{ env.VERSIONED_NAME }}`**: Bản build có gắn mốc thời gian và commit SHA.
+          files: |
+            app/build/outputs/apk/release/QuarkTube-release.apk
+            app/build/outputs/apk/release/${{ env.VERSIONED_NAME }}
+          prerelease: ${{ !startsWith(github.ref, 'refs/tags/') }}
+          generate_release_notes: true
+
+      - name: Add Release Summary to Step Summary
+        run: |
+          TAG="${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'latest' }}"
+          RELEASE_URL="https://github.com/${{ github.repository }}/releases/tag/${TAG}"
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/QuarkTube-release.apk"
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 GitHub Release" >> $GITHUB_STEP_SUMMARY
+          echo "- **Release Page:** [View Release on GitHub](${RELEASE_URL})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Direct APK Download (GitHub Release):** [Download QuarkTube-release.apk](${DOWNLOAD_URL})" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload APK as GitHub Artifact (Backup)
         uses: actions/upload-artifact@v4
         with:
           name: QuarkTube-release-apk
-          path: app/build/outputs/apk/release/QuarkTube-release.apk
+          path: |
+            app/build/outputs/apk/release/QuarkTube-release.apk
+            app/build/outputs/apk/release/${{ env.VERSIONED_NAME }}
           if-no-files-found: error
