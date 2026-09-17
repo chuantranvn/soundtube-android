@@ -127,8 +127,8 @@ object BackgroundPlayerManager {
                 domStorageEnabled = true
                 databaseEnabled = true
                 mediaPlaybackRequiresUserGesture = false
-                useWideViewPort = false
-                loadWithOverviewMode = false
+                useWideViewPort = true
+                loadWithOverviewMode = true
                 cacheMode = WebSettings.LOAD_DEFAULT
             }
 
@@ -343,20 +343,22 @@ object BackgroundPlayerManager {
                     padding: 0;
                 }
                 html, body {
-                    width: 100% !important;
-                    height: 100% !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    max-width: 100vw !important;
+                    max-height: 100vh !important;
                     margin: 0 !important;
                     padding: 0 !important;
                     background-color: #000000 !important;
                     overflow: hidden !important;
                 }
-                #player, iframe {
+                #player, #player iframe, iframe {
                     position: absolute !important;
                     top: 0 !important;
                     left: 0 !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                    border: none !important;
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    border: 0 !important;
                     display: block !important;
                 }
             </style>
@@ -369,28 +371,30 @@ object BackgroundPlayerManager {
                 var currentVideoId = '';
                 var progressInterval = null;
 
-                function resizePlayer(w, h) {
+                function resizePlayer() {
                     try {
-                        var width = (w && w > 0) ? w : (window.innerWidth || document.documentElement.clientWidth);
-                        var height = (h && h > 0) ? h : (window.innerHeight || document.documentElement.clientHeight);
                         var el = document.getElementById('player');
                         if (el) {
-                            el.style.width = '100%';
-                            el.style.height = '100%';
+                            el.style.width = '100vw';
+                            el.style.height = '100vh';
                         }
                         var ifr = document.querySelector('iframe');
                         if (ifr) {
-                            ifr.style.width = '100%';
-                            ifr.style.height = '100%';
-                        }
-                        if (player && player.setSize) {
-                            player.setSize(width, height);
+                            ifr.style.width = '100vw';
+                            ifr.style.height = '100vh';
+                            ifr.removeAttribute('width');
+                            ifr.removeAttribute('height');
                         }
                     } catch(e) {}
                 }
 
                 window.addEventListener('resize', function() {
                     resizePlayer();
+                });
+                window.addEventListener('orientationchange', function() {
+                    setTimeout(resizePlayer, 100);
+                    setTimeout(resizePlayer, 300);
+                    setTimeout(resizePlayer, 600);
                 });
 
                 function onYouTubeIframeAPIReady() {

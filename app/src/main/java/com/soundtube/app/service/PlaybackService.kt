@@ -52,12 +52,12 @@ class PlaybackService : Service() {
 
         // 1. Giữ WakeLock để CPU điện thoại không bị dừng khi tắt màn hình
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SoundTube:AudioPlayback").apply {
+        wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "QuarkTube:AudioPlayback").apply {
             setReferenceCounted(false)
         }
 
         // 2. Khởi tạo MediaSessionCompat cho Lock Screen & Bluetooth
-        mediaSession = MediaSessionCompat(this, "SoundTubeMediaSession").apply {
+        mediaSession = MediaSessionCompat(this, "QuarkTubeMediaSession").apply {
             setCallback(object : MediaSessionCompat.Callback() {
                 override fun onPlay() {
                     BackgroundPlayerManager.resume()
@@ -259,7 +259,7 @@ class PlaybackService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "SoundTube Audio Playback",
+                "QuarkTube Audio Playback",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Điều khiển nhạc trên màn hình khóa khi tắt màn hình"

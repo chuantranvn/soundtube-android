@@ -27,6 +27,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -52,7 +53,7 @@ android {
         val variant = this
         variant.outputs.all {
             val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
-            output.outputFileName = "SoundTube-${variant.buildType.name}.apk"
+            output.outputFileName = "QuarkTube-${variant.buildType.name}.apk"
         }
     }
 }

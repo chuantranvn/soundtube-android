@@ -84,9 +84,11 @@ fun FullscreenPlayerView(
 
     // Đảm bảo video được resize đúng tỷ lệ toàn màn hình sau khi xoay ngang
     LaunchedEffect(Unit) {
-        delay(200)
+        delay(100)
         BackgroundPlayerManager.triggerResize()
-        delay(500)
+        delay(300)
+        BackgroundPlayerManager.triggerResize()
+        delay(700)
         BackgroundPlayerManager.triggerResize()
     }
 

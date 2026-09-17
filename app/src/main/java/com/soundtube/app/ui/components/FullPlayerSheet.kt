@@ -234,23 +234,34 @@ fun FullPlayerSheet(
                         colors = CardDefaults.cardColors(containerColor = Color.Black)
                     ) {
                         Box(modifier = Modifier.fillMaxSize()) {
-                            AndroidView(
-                                factory = { ctx ->
-                                    val wv = BackgroundPlayerManager.getOrCreateWebView(ctx)
-                                    (wv.parent as? ViewGroup)?.removeView(wv)
-                                    wv.isClickable = false
-                                    wv.isFocusable = false
-                                    wv
-                                },
-                                update = { wv ->
-                                    wv.isClickable = false
-                                    wv.isFocusable = false
-                                    wv.post {
-                                        wv.evaluateJavascript("if (window.resizePlayer) { window.resizePlayer(); }", null)
-                                    }
-                                },
-                                modifier = Modifier.fillMaxSize()
-                            )
+                            if (isVisible) {
+                                AndroidView(
+                                    factory = { ctx ->
+                                        val wv = BackgroundPlayerManager.getOrCreateWebView(ctx)
+                                        (wv.parent as? ViewGroup)?.removeView(wv)
+                                        wv.isClickable = false
+                                        wv.isFocusable = false
+                                        wv.layoutParams = ViewGroup.LayoutParams(
+                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                            ViewGroup.LayoutParams.MATCH_PARENT
+                                        )
+                                        wv
+                                    },
+                                    update = { wv ->
+                                        wv.isClickable = false
+                                        wv.isFocusable = false
+                                        wv.layoutParams = ViewGroup.LayoutParams(
+                                            ViewGroup.LayoutParams.MATCH_PARENT,
+                                            ViewGroup.LayoutParams.MATCH_PARENT
+                                        )
+                                        wv.requestLayout()
+                                        wv.post {
+                                            wv.evaluateJavascript("if (window.resizePlayer) { window.resizePlayer(); }", null)
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
 
                             // Lớp phủ chạm để Tạm dừng / Tiếp tục phát
                             Box(
@@ -269,21 +280,28 @@ fun FullPlayerSheet(
                             }
 
                             // Nút phóng to toàn màn hình ở góc dưới bên phải
-                            IconButton(
-                                onClick = onEnterFullscreen,
+                            Box(
                                 modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .padding(10.dp)
-                                    .size(44.dp)
-                                    .background(Color(0xCC000000), RoundedCornerShape(10.dp))
-                                    .zIndex(10f)
+                                    .fillMaxSize()
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.BottomEnd
                             ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Fullscreen,
-                                    contentDescription = "Toàn màn hình",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(28.dp)
-                                )
+                                IconButton(
+                                    onClick = {
+                                        android.util.Log.d("FullPlayerSheet", "Entering fullscreen clicked")
+                                        onEnterFullscreen()
+                                    },
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .background(Color(0xCC000000), RoundedCornerShape(12.dp))
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Fullscreen,
+                                        contentDescription = "Toàn màn hình",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(30.dp)
+                                    )
+                                }
                             }
                         }
                     }

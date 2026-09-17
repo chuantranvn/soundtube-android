@@ -11,6 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -94,8 +95,13 @@ class MainActivity : ComponentActivity() {
                 val seriesEpisodes by viewModel.seriesEpisodes.collectAsState()
                 val progressUpdated by viewModel.progressUpdated.collectAsState()
 
+                // Nhận diện thiết bị là máy tính bảng (tablet) hoặc màn hình lớn (foldable)
+                val isTablet = remember {
+                    resources.configuration.smallestScreenWidthDp >= 600
+                }
+
                 // Điều khiển xoay ngang màn hình và ẩn thanh hệ thống khi xem Fullscreen
-                LaunchedEffect(isFullscreen) {
+                LaunchedEffect(isFullscreen, isTablet) {
                     val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
                     if (isFullscreen) {
                         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
@@ -106,7 +112,13 @@ class MainActivity : ComponentActivity() {
                                 android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
                         }
                     } else {
-                        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                        // Trên Tablet: Cho phép xoay tự do theo hướng cầm máy (Landscape / Portrait), không ép dọc
+                        // Trên Phone: Mặc định giữ ở chế độ xoay dọc (Portrait)
+                        requestedOrientation = if (isTablet) {
+                            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                        } else {
+                            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                        }
                         windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                             window.attributes.layoutInDisplayCutoutMode =
