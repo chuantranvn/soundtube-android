@@ -51,8 +51,10 @@ jobs:
 
           APK_PATH="app/build/outputs/apk/release/QuarkTube-release.apk"
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          # Lấy ngày giờ theo múi giờ Việt Nam (GMT+7)
+          BUILD_DATE=$(TZ='Asia/Ho_Chi_Minh' date +'%Y-%m-%d_%Hh%M')
 
-          # 1. Upload fixed latest release APK
+          # 1. Upload file cố định luôn là bản mới nhất
           echo "Uploading QuarkTube-release.apk to Supabase..."
           RESPONSE_LATEST=$(curl -s -w "\n%{http_code}" -X POST \
             "${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/QuarkTube-release.apk" \
@@ -70,8 +72,8 @@ jobs:
           fi
           echo "Upload QuarkTube-release.apk succeeded: $BODY"
 
-          # 2. Upload commit-specific versioned APK
-          VERSIONED_NAME="QuarkTube-${SHORT_SHA}.apk"
+          # 2. Upload file có ngày tháng giờ theo dạng: QuarkTube-2026-09-17_10h35-3e8db85.apk
+          VERSIONED_NAME="QuarkTube-${BUILD_DATE}-${SHORT_SHA}.apk"
           echo "Uploading $VERSIONED_NAME to Supabase..."
           curl -s -X POST \
             "${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${VERSIONED_NAME}" \
@@ -80,12 +82,12 @@ jobs:
             -H "x-upsert: true" \
             --data-binary "@${APK_PATH}"
 
-          # Summary for GitHub Actions Job Summary
+          # In link download ra trang kết quả Actions
           PUBLIC_URL="${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/QuarkTube-release.apk"
           echo "### 🚀 APK Uploaded to Supabase Successfully!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Direct Download URL:** [Download QuarkTube-release.apk](${PUBLIC_URL})" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit Version:** \`${VERSIONED_NAME}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Direct Download URL (Latest):** [Download QuarkTube-release.apk](${PUBLIC_URL})" >> $GITHUB_STEP_SUMMARY
+          echo "- **Versioned File:** \`${VERSIONED_NAME}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Size:** $(du -h $APK_PATH | cut -f1)" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload APK as GitHub Artifact (Backup)
