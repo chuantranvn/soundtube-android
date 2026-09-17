@@ -1,7 +1,7 @@
 # 🎵 QuarkTube - Android YouTube & Background Music Player
 
 <p align="center">
-  <img src="app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" width="100" height="100" alt="QuarkTube Logo" />
+  <img src="app/src/main/ic_launcher-web.png" width="110" height="110" alt="QuarkTube Logo" />
 </p>
 
 <p align="center">
@@ -9,10 +9,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/chuantranvn/soundtube-android/releases"><img src="https://img.shields.io/github/v/release/chuantranvn/soundtube-android?style=for-the-badge&color=ff0033" alt="Release" /></a>
-  <a href="https://github.com/chuantranvn/soundtube-android/actions"><img src="https://img.shields.io/github/actions/workflow/status/chuantranvn/soundtube-android/deploy-supabase.yml?branch=main&style=for-the-badge&label=Build%20APK" alt="Build Status" /></a>
-  <img src="https://img.shields.io/badge/Android-8.0%2B%20(API%2026%2B)-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android Version" />
-  <img src="https://img.shields.io/badge/Kotlin-1.9%2B-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin" />
+  <a href="https://github.com/chuantranvn/soundtube-android/releases">
+    <img src="https://img.shields.io/badge/Release-APK%20Latest-E50914?style=flat-square&logo=github&logoColor=white" alt="Latest Release" />
+  </a>
+  <a href="https://github.com/chuantranvn/soundtube-android/actions/workflows/deploy-supabase.yml">
+    <img src="https://github.com/chuantranvn/soundtube-android/actions/workflows/deploy-supabase.yml/badge.svg?branch=main" alt="Build Status" />
+  </a>
+  <img src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android Version" />
+  <img src="https://img.shields.io/badge/Kotlin-1.9%2B-7F52FF?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin" />
+  <img src="https://img.shields.io/badge/Compose-Material%203-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white" alt="Compose" />
 </p>
 
 ---
