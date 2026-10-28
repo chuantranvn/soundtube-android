@@ -184,6 +184,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun onLogoClick() {
+        closeSearch()
+        selectNavTab(YouTubeNavTab.HOME)
+    }
+
     fun selectNavTab(tab: YouTubeNavTab) {
         if (tab == YouTubeNavTab.CREATE) {
             // Khi bấm nút Tạo (+), mở ô tìm kiếm nhanh hoặc dán link
@@ -219,6 +224,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun selectCategory(category: String) {
+        if (_searchQuery.value.isBlank() && _isSearchActive.value) {
+            closeSearch()
+        }
         val isSameCategory = _selectedCategory.value == category
         _selectedCategory.value = category
         if (isSameCategory) {
@@ -229,12 +237,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun toggleSearch() {
+        if (_isSearchActive.value && _selectedNavTab.value == YouTubeNavTab.HOME) {
+            closeSearch()
+        } else {
+            openSearch()
+        }
+    }
+
     fun openSearch() {
+        _selectedNavTab.value = YouTubeNavTab.HOME
         _isSearchActive.value = true
     }
 
     fun closeSearch() {
         _isSearchActive.value = false
+        _searchQuery.value = ""
         searchContinuationToken = null
     }
 
@@ -480,21 +498,66 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun playPrevSong() {
-        if (currentPositionMs.value > 3000L) {
+    private var lastPrevClickTime = 0L
+
+    fun playPrevSong(forcePrevious: Boolean = false) {
+        val now = System.currentTimeMillis()
+        val isRecentClick = (now - lastPrevClickTime) < 2500L
+        lastPrevClickTime = now
+
+        // 1. Nếu đang nghe tập truyện trong một series, ưu tiên tìm tập trước đó của bộ truyện
+        val series = _seriesEpisodes.value
+        val curSong = currentSong.value
+        if (series.isNotEmpty() && curSong != null) {
+            val epIndex = series.indexOfFirst { it.id == curSong.id }
+            if (epIndex > 0) {
+                playSong(series[epIndex - 1], series)
+                return
+            }
+        }
+
+        val queue = _playQueue.value
+        if (queue.isEmpty()) {
             seekTo(0L)
             return
         }
 
-        val queue = _playQueue.value
-        if (queue.isEmpty()) return
+        // Nếu bài phát chưa quá 3 giây HOẶC người dùng nhấn liên tiếp (trong 2.5s) HOẶC forcePrevious:
+        // chuyển ngay sang bài trước đó
+        val shouldGoToPrev = forcePrevious || isRecentClick || currentPositionMs.value <= 3000L
 
-        val prevIndex = _currentIndex.value - 1
-        if (prevIndex >= 0) {
-            val prevSong = queue[prevIndex]
-            playSong(prevSong, queue)
+        if (shouldGoToPrev) {
+            val prevIndex = _currentIndex.value - 1
+            if (prevIndex >= 0) {
+                val prevSong = queue[prevIndex]
+                playSong(prevSong, queue)
+            } else if (queue.size > 1) {
+                // Đang ở bài đầu tiên, vòng về bài cuối cùng của danh sách
+                playSong(queue.last(), queue)
+            } else {
+                seekTo(0L)
+            }
         } else {
+            // Mới bấm lần đầu khi bài đang phát dở quá 3s -> tua về đầu bài
             seekTo(0L)
+        }
+    }
+
+    fun selectSubscriptionChannel(channelName: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val query = if (channelName == "Tất cả") {
+                    "kênh đăng ký nhạc việt nam 2026"
+                } else {
+                    "$channelName official"
+                }
+                val subs = YouTubeExtractor.search(query)
+                _subscriptionsVideos.value = subs
+            } catch (_: Exception) {
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 

@@ -10,8 +10,18 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleOut
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.alpha
+import kotlinx.coroutines.delay
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -44,6 +54,8 @@ import com.soundtube.app.ui.screens.ShortsScreen
 import com.soundtube.app.ui.screens.SubscriptionsScreen
 import com.soundtube.app.ui.screens.YouScreen
 import com.soundtube.app.ui.theme.DarkBackground
+import com.soundtube.app.ui.theme.QuantumFieldBackground
+import com.soundtube.app.ui.theme.QuantumSplashScreen
 import com.soundtube.app.ui.theme.SoundTubeTheme
 
 class MainActivity : ComponentActivity() {
@@ -58,6 +70,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         checkNotificationPermission()
 
@@ -93,7 +106,6 @@ class MainActivity : ComponentActivity() {
                 val isSyncEnabled by viewModel.isSyncEnabled.collectAsState()
                 val nextEpisode by viewModel.nextEpisode.collectAsState()
                 val seriesEpisodes by viewModel.seriesEpisodes.collectAsState()
-                val progressUpdated by viewModel.progressUpdated.collectAsState()
 
                 // Nhận diện thiết bị là máy tính bảng (tablet) hoặc màn hình lớn (foldable)
                 val isTablet = remember {
@@ -107,6 +119,8 @@ class MainActivity : ComponentActivity() {
                         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                         windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+                        windowInsetsController.isAppearanceLightStatusBars = false
+                        windowInsetsController.isAppearanceLightNavigationBars = false
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                             window.attributes.layoutInDisplayCutoutMode =
                                 android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
@@ -120,6 +134,8 @@ class MainActivity : ComponentActivity() {
                             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                         }
                         windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
+                        windowInsetsController.isAppearanceLightStatusBars = true
+                        windowInsetsController.isAppearanceLightNavigationBars = true
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                             window.attributes.layoutInDisplayCutoutMode =
                                 android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
@@ -138,45 +154,66 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                // Màn hình Splash Lượng Tử khi mới mở ứng dụng
+                var showSplash by remember { mutableStateOf(true) }
+                LaunchedEffect(Unit) {
+                    delay(2400)
+                    showSplash = false
+                }
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = DarkBackground
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .then(if (!isFullscreen) Modifier.statusBarsPadding() else Modifier)
-                    ) {
-                        // 0a. Gắn WebView của BackgroundPlayerManager khi không ở chế độ xem video toàn màn hình
-                        if (!isFullscreen && (!isPlayerSheetVisible || !isVideoMode)) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        // Lớp nền Trường Lượng Tử phủ toàn bộ màn hình (từ sát mép trên Status Bar xuống đáy)
+                        if (!isFullscreen) {
+                            QuantumFieldBackground()
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .then(if (!isFullscreen) Modifier.statusBarsPadding() else Modifier)
+                        ) {
+                            // 0a. Gắn WebView của BackgroundPlayerManager khi không ở chế độ xem video toàn màn hình
+                            if (!isFullscreen && (!isPlayerSheetVisible || !isVideoMode)) {
+                                AndroidView(
+                                    factory = { ctx ->
+                                        BackgroundPlayerManager.getOrCreateWebView(ctx).apply {
+                                            setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                                            isClickable = false
+                                            isFocusable = false
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .size(1.dp)
+                                        .alpha(0f)
+                                )
+                            }
+
+                            // 0b. Gắn WebView của YouTubeSyncManager vào View Hierarchy (trong suốt 100%)
                             AndroidView(
                                 factory = { ctx ->
-                                    BackgroundPlayerManager.getOrCreateWebView(ctx).apply {
+                                    YouTubeSyncManager.getOrCreateWebView(ctx).apply {
+                                        setBackgroundColor(android.graphics.Color.TRANSPARENT)
                                         isClickable = false
                                         isFocusable = false
                                     }
                                 },
-                                modifier = Modifier.size(1.dp)
+                                modifier = Modifier
+                                    .size(1.dp)
+                                    .alpha(0f)
                             )
-                        }
-
-                        // 0b. Gắn WebView của YouTubeSyncManager vào View Hierarchy để tự động đồng bộ lịch sử xem với YouTube
-                        AndroidView(
-                            factory = { ctx ->
-                                YouTubeSyncManager.getOrCreateWebView(ctx).apply {
-                                    isClickable = false
-                                    isFocusable = false
-                                }
-                            },
-                            modifier = Modifier.size(1.dp)
-                        )
 
                         // Giao diện chính của ứng dụng
                         Column(modifier = Modifier.fillMaxSize()) {
-                            // 1. YouTube TopBar (Logo + Cast + Chuông thông báo badge 5 + Tìm kiếm + Avatar)
+                            // 1. YouTube TopBar (Logo + Tìm kiếm + Avatar)
                             YouTubeTopBar(
-                                onSearchClick = viewModel::openSearch,
+                                onSearchClick = viewModel::toggleSearch,
                                 onAvatarClick = { viewModel.selectNavTab(YouTubeNavTab.YOU) },
+                                onLogoClick = viewModel::onLogoClick,
+                                isSearchActive = isSearchActive,
                                 userAvatarUrl = userAvatar,
                                 isLoggedIn = isLoggedIn
                             )
@@ -230,7 +267,8 @@ class MainActivity : ComponentActivity() {
                                         SubscriptionsScreen(
                                             videoList = subscriptionsVideos,
                                             isLoading = isLoading,
-                                            onPlayVideo = viewModel::playSong
+                                            onPlayVideo = viewModel::playSong,
+                                            onSelectChannel = viewModel::selectSubscriptionChannel
                                         )
                                     }
                                     YouTubeNavTab.YOU -> {
@@ -324,6 +362,17 @@ class MainActivity : ComponentActivity() {
                                 onPrevious = viewModel::playPrevSong,
                                 onExitFullscreen = viewModel::exitFullscreen
                             )
+                        }
+                        }
+
+                        // 8. Màn hình Khởi động Lượng Tử (Splash Screen) với hiệu ứng tan rã bước sóng mượt mà
+                        AnimatedVisibility(
+                            visible = showSplash,
+                            enter = fadeIn(animationSpec = tween(250)),
+                            exit = fadeOut(animationSpec = tween(600, easing = FastOutSlowInEasing)) +
+                                scaleOut(targetScale = 1.10f, animationSpec = tween(600, easing = FastOutSlowInEasing))
+                        ) {
+                            QuantumSplashScreen()
                         }
                     }
                 }

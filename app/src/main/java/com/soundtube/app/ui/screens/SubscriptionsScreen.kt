@@ -39,8 +39,16 @@ import com.soundtube.app.ui.components.YouTubeVideoCard
 import com.soundtube.app.ui.theme.AccentRed
 import com.soundtube.app.ui.theme.DarkBackground
 import com.soundtube.app.ui.theme.DarkSurface
+import com.soundtube.app.ui.theme.QuantumLoadingIndicator
 import com.soundtube.app.ui.theme.TextPrimary
 import com.soundtube.app.ui.theme.TextSecondary
+import com.soundtube.app.ui.theme.neumorphic
+
+import androidx.compose.foundation.border
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 
 data class ChannelItem(
     val name: String,
@@ -52,9 +60,12 @@ data class ChannelItem(
 fun SubscriptionsScreen(
     videoList: List<Song>,
     isLoading: Boolean,
-    onPlayVideo: (Song) -> Unit,
+    onPlayVideo: (Song, List<Song>) -> Unit,
+    onSelectChannel: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var selectedChannel by remember { mutableStateOf("Tất cả") }
+
     val topChannels = listOf(
         ChannelItem("Tất cả", "★", AccentRed),
         ChannelItem("Sơn Tùng M-TP", "S", Color(0xFF1E88E5)),
@@ -66,9 +77,7 @@ fun SubscriptionsScreen(
     )
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(DarkBackground)
+        modifier = modifier.fillMaxSize()
     ) {
         // Dải danh sách kênh đăng ký cuộn ngang
         Row(
@@ -80,16 +89,28 @@ fun SubscriptionsScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             topChannels.forEach { channel ->
+                val isSelected = selectedChannel == channel.name
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.width(62.dp)
+                    modifier = Modifier
+                        .width(62.dp)
+                        .clickable {
+                            selectedChannel = channel.name
+                            onSelectChannel(channel.name)
+                        }
                 ) {
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(52.dp)
+                            .size(54.dp)
+                            .neumorphic(shape = CircleShape, elevation = 3.dp, pressed = isSelected)
+                            .padding(4.dp)
                             .clip(CircleShape)
                             .background(channel.color)
+                            .then(
+                                if (isSelected) Modifier.border(2.dp, AccentRed, CircleShape)
+                                else Modifier
+                            )
                     ) {
                         Text(
                             text = channel.initial,
@@ -101,8 +122,9 @@ fun SubscriptionsScreen(
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = channel.name,
-                        color = TextSecondary,
+                        color = if (isSelected) AccentRed else TextSecondary,
                         fontSize = 11.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center
@@ -119,7 +141,9 @@ fun SubscriptionsScreen(
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = AccentRed)
+                QuantumLoadingIndicator(
+                    message = "Đang kết nối kênh phát lượng tử..."
+                )
             }
         } else {
             LazyColumn(
@@ -130,7 +154,7 @@ fun SubscriptionsScreen(
                 items(videoList, key = { it.id }) { video ->
                     YouTubeVideoCard(
                         song = video,
-                        onClick = { onPlayVideo(video) }
+                        onClick = { onPlayVideo(video, videoList) }
                     )
                 }
 

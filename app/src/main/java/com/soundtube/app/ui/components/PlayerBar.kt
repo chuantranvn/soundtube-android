@@ -35,9 +35,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.soundtube.app.data.model.Song
+import com.soundtube.app.ui.theme.AccentGradient
 import com.soundtube.app.ui.theme.AccentRed
+import com.soundtube.app.ui.theme.NeuDarkShadow
+import com.soundtube.app.ui.theme.NeuIconButton
+import com.soundtube.app.ui.theme.QuantumWaveProgressBar
 import com.soundtube.app.ui.theme.TextPrimary
 import com.soundtube.app.ui.theme.TextSecondary
+import com.soundtube.app.ui.theme.neumorphic
+import androidx.compose.foundation.shape.CircleShape
 
 @Composable
 fun PlayerBar(
@@ -61,9 +67,9 @@ fun PlayerBar(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 2.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF212121))
+            .padding(start = 14.dp, end = 14.dp, top = 8.dp, bottom = 4.dp)
+            .neumorphic(shape = RoundedCornerShape(20.dp), elevation = 5.dp, quantumGlow = true)
+            .clip(RoundedCornerShape(20.dp))
     ) {
         Row(
             modifier = Modifier
@@ -118,11 +124,12 @@ fun PlayerBar(
 
             Spacer(modifier = Modifier.width(4.dp))
 
-            // Nút Play / Pause
+            // Nút Play / Pause (đĩa neumorphic nổi + vòng quỹ đạo lượng tử + lõi gradient)
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(46.dp)
             ) {
+                QuantumOrbitalHalo(size = 46.dp)
                 if (isBuffering) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(22.dp),
@@ -130,16 +137,25 @@ fun PlayerBar(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    IconButton(
+                    NeuIconButton(
                         onClick = onTogglePlayPause,
-                        modifier = Modifier.size(40.dp)
+                        size = 38.dp,
+                        elevation = 3.dp
                     ) {
-                        Icon(
-                            imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                            contentDescription = if (isPlaying) "Tạm dừng" else "Phát",
-                            tint = TextPrimary,
-                            modifier = Modifier.size(26.dp)
-                        )
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(CircleShape)
+                                .background(AccentGradient)
+                        ) {
+                            Icon(
+                                imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                                contentDescription = if (isPlaying) "Tạm dừng" else "Phát",
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -173,14 +189,11 @@ fun PlayerBar(
             }
         }
 
-        // Thanh tiến trình phát mỏng ở đáy mini player
-        LinearProgressIndicator(
-            progress = { progress },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(2.dp),
-            color = AccentRed,
-            trackColor = Color(0xFF333333)
+        // Thanh tiến trình Quang phổ Lượng tử kèm hạt Photon phát sáng ở đáy mini player
+        QuantumWaveProgressBar(
+            progress = progress,
+            height = 3.5.dp,
+            modifier = Modifier.padding(horizontal = 10.dp)
         )
     }
 }

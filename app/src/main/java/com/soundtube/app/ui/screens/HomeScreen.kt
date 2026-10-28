@@ -1,6 +1,15 @@
 package com.soundtube.app.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -25,14 +34,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Explore
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -46,20 +50,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.soundtube.app.data.model.Song
+import com.soundtube.app.ui.components.QuantumExploreIcon
+import com.soundtube.app.ui.components.QuantumSearchIcon
 import com.soundtube.app.ui.components.YouTubeVideoCard
 import com.soundtube.app.ui.theme.AccentRed
 import com.soundtube.app.ui.theme.DarkBackground
 import com.soundtube.app.ui.theme.DarkSurface
+import com.soundtube.app.ui.theme.NeuButton
+import com.soundtube.app.ui.theme.QuantumLoadingIndicator
+import com.soundtube.app.ui.theme.QuantumMiniLoader
 import com.soundtube.app.ui.theme.TextMuted
 import com.soundtube.app.ui.theme.TextPrimary
 import com.soundtube.app.ui.theme.TextSecondary
+import com.soundtube.app.ui.theme.neumorphic
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,9 +93,40 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val searchFocusRequester = remember { FocusRequester() }
     val categories = listOf("Tất cả", "Truyện / Sách nói", "Âm nhạc", "Danh sách kết hợp", "Podcast", "Tin tức")
 
     val listState = rememberLazyListState()
+
+    // Bấm nút Back hệ thống khi đang mở ô tìm kiếm sẽ đóng mượt ô tìm kiếm
+    BackHandler(enabled = isSearchActive) {
+        focusManager.clearFocus()
+        keyboardController?.hide()
+        onCloseSearch()
+    }
+
+    // Tự động focus và bật bàn phím mượt mà mỗi khi mở ô tìm kiếm; ẩn bàn phím khi đóng
+    LaunchedEffect(isSearchActive) {
+        if (isSearchActive) {
+            try {
+                searchFocusRequester.requestFocus()
+                keyboardController?.show()
+            } catch (_: Exception) {}
+        } else {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+        }
+    }
+
+    // Khi người dùng cuộn danh sách mà chưa nhập từ khóa tìm kiếm -> tự động ẩn gọn ô tìm kiếm
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (listState.isScrollInProgress && isSearchActive && searchQuery.isBlank()) {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+            onCloseSearch()
+        }
+    }
 
     // Tự động phát hiện khi cuộn gần chạm đáy (còn 3 phần tử) để kích hoạt tải thêm ngầm
     val shouldLoadMore = remember {
@@ -109,26 +153,35 @@ fun HomeScreen(
     }
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(DarkBackground)
+        modifier = modifier.fillMaxSize()
     ) {
-        // 1. Ô tìm kiếm khi đang mở chế độ tìm kiếm
-        AnimatedVisibility(visible = isSearchActive) {
-            Row(
+        // 1. Ô tìm kiếm hiện/ẩn mượt mà khi bấm kính lúp (không dùng mũi tên quay lại)
+        AnimatedVisibility(
+            visible = isSearchActive,
+            enter = expandVertically(
+                expandFrom = Alignment.Top,
+                animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)
+            ) + fadeIn(
+                animationSpec = tween(durationMillis = 260)
+            ) + scaleIn(
+                initialScale = 0.94f,
+                animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)
+            ),
+            exit = shrinkVertically(
+                shrinkTowards = Alignment.Top,
+                animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing)
+            ) + fadeOut(
+                animationSpec = tween(durationMillis = 200)
+            ) + scaleOut(
+                targetScale = 0.94f,
+                animationSpec = tween(durationMillis = 260, easing = FastOutSlowInEasing)
+            )
+        ) {
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
             ) {
-                IconButton(onClick = onCloseSearch) {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowBack,
-                        contentDescription = "Quay lại",
-                        tint = TextPrimary
-                    )
-                }
-
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = onSearchQueryChanged,
@@ -140,12 +193,15 @@ fun HomeScreen(
                         )
                     },
                     trailingIcon = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(end = 4.dp)
+                        ) {
                             if (searchQuery.isNotEmpty()) {
                                 IconButton(onClick = { onSearchQueryChanged("") }) {
                                     Icon(
                                         imageVector = Icons.Filled.Clear,
-                                        contentDescription = "Xóa",
+                                        contentDescription = "Xóa nội dung",
                                         tint = TextSecondary
                                     )
                                 }
@@ -153,14 +209,15 @@ fun HomeScreen(
                             IconButton(
                                 onClick = {
                                     focusManager.clearFocus()
-                                    onSearch()
+                                    keyboardController?.hide()
+                                    if (searchQuery.isBlank()) {
+                                        onCloseSearch()
+                                    } else {
+                                        onSearch()
+                                    }
                                 }
                             ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Search,
-                                    contentDescription = "Tìm",
-                                    tint = AccentRed
-                                )
+                                QuantumSearchIcon(size = 20.dp)
                             }
                         }
                     },
@@ -169,71 +226,90 @@ fun HomeScreen(
                     keyboardActions = KeyboardActions(
                         onSearch = {
                             focusManager.clearFocus()
-                            onSearch()
+                            keyboardController?.hide()
+                            if (searchQuery.isBlank()) {
+                                onCloseSearch()
+                            } else {
+                                onSearch()
+                            }
                         }
                     ),
                     shape = RoundedCornerShape(24.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = DarkSurface,
-                        unfocusedContainerColor = DarkSurface,
-                        focusedBorderColor = AccentRed,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedBorderColor = Color.Transparent,
                         unfocusedBorderColor = Color.Transparent,
                         focusedTextColor = TextPrimary,
                         unfocusedTextColor = TextPrimary,
                         cursorColor = AccentRed
                     ),
-                    modifier = Modifier.weight(1f)
+                    // Ô tìm kiếm lõm (inset) kiểu neumorphic lượng tử với đường viền mảnh tinh tế
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(searchFocusRequester)
+                        .neumorphic(
+                            shape = RoundedCornerShape(24.dp),
+                            elevation = 3.dp,
+                            pressed = true,
+                            quantumGlow = true,
+                            borderWidth = 0.65.dp
+                        )
                 )
             }
         }
 
-        // 2. Dải Filter Chips danh mục (La bàn 🧭 + Tất cả + Âm nhạc + ...)
+        // 2. Dải chip danh mục neumorphic (La bàn 🧭 + Tất cả + Âm nhạc + ...)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 12.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Nút La bàn / Khám phá
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color(0xFF272727))
-                    .clickable { onCategorySelected("Tất cả") }
+            // Nút Nguyên tử Lượng tử / Khám phá
+            NeuButton(
+                onClick = { onCategorySelected("Tất cả") },
+                shape = RoundedCornerShape(12.dp),
+                elevation = 3.dp,
+                modifier = Modifier.size(36.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Explore,
-                    contentDescription = "Khám phá",
-                    tint = TextPrimary,
-                    modifier = Modifier.size(18.dp)
-                )
+                QuantumExploreIcon(size = 20.dp)
             }
 
-            // Các thẻ phân loại
+            // Các thẻ phân loại: chip nổi, khi chọn thì lõm xuống + viền lăng kính lượng tử + chấm hạt Quark
             categories.forEach { category ->
                 val isSelected = selectedCategory == category
-                FilterChip(
-                    selected = isSelected,
+                NeuButton(
                     onClick = { onCategorySelected(category) },
-                    label = {
+                    shape = RoundedCornerShape(14.dp),
+                    elevation = 3.dp,
+                    selected = isSelected,
+                    quantumGlow = isSelected,
+                    modifier = Modifier.height(35.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 14.dp)
+                    ) {
+                        if (isSelected) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(AccentRed)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                        }
                         Text(
                             text = category,
                             fontSize = 12.5.sp,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            color = if (isSelected) Color.Black else TextPrimary
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) AccentRed else TextSecondary
                         )
-                    },
-                    colors = FilterChipDefaults.filterChipColors(
-                        containerColor = Color(0xFF272727),
-                        selectedContainerColor = Color.White
-                    ),
-                    border = null,
-                    shape = RoundedCornerShape(8.dp)
-                )
+                    }
+                }
             }
         }
 
@@ -255,7 +331,9 @@ fun HomeScreen(
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = AccentRed)
+                QuantumLoadingIndicator(
+                    message = "Đang đồng bộ bước sóng lượng tử..."
+                )
             }
         } else {
             LazyColumn(
@@ -272,7 +350,7 @@ fun HomeScreen(
                     )
                 }
 
-                // Loading spinner khi đang tải thêm ở chân trang
+                // Loading spinner lượng tử khi đang tải thêm ở chân trang
                 if (isLoadingMore) {
                     item(key = "loading_more_spinner") {
                         Box(
@@ -281,11 +359,7 @@ fun HomeScreen(
                                 .padding(vertical = 16.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(28.dp),
-                                color = AccentRed,
-                                strokeWidth = 2.5.dp
-                            )
+                            QuantumMiniLoader()
                         }
                     }
                 }

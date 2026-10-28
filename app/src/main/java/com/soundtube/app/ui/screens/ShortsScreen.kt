@@ -1,5 +1,7 @@
 package com.soundtube.app.ui.screens
 
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +20,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlayArrow
@@ -29,12 +30,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -44,6 +50,7 @@ import com.soundtube.app.data.model.Song
 import com.soundtube.app.ui.theme.AccentRed
 import com.soundtube.app.ui.theme.DarkBackground
 import com.soundtube.app.ui.theme.DarkSurface
+import com.soundtube.app.ui.theme.QuantumLoadingIndicator
 import com.soundtube.app.ui.theme.TextPrimary
 import com.soundtube.app.ui.theme.TextSecondary
 
@@ -51,40 +58,20 @@ import com.soundtube.app.ui.theme.TextSecondary
 fun ShortsScreen(
     shortsList: List<Song>,
     isLoading: Boolean,
-    onPlayShort: (Song) -> Unit,
+    onPlayShort: (Song, List<Song>) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(DarkBackground)
+        modifier = modifier.fillMaxSize()
     ) {
-        if (isLoading) {
+        if (isLoading || shortsList.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = AccentRed)
-            }
-        } else if (shortsList.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Filled.FlashOn,
-                        contentDescription = null,
-                        tint = AccentRed,
-                        modifier = Modifier.size(54.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Đang tải video ngắn YouTube Shorts...",
-                        color = TextSecondary,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
+                QuantumLoadingIndicator(
+                    message = "Đang hội tụ xung nhịp Shorts lượng tử..."
+                )
             }
         } else {
             LazyColumn(
@@ -93,7 +80,7 @@ fun ShortsScreen(
                 items(shortsList, key = { it.id }) { short ->
                     ShortsCardItem(
                         short = short,
-                        onClick = { onPlayShort(short) }
+                        onClick = { onPlayShort(short, shortsList) }
                     )
                 }
 
@@ -110,6 +97,9 @@ fun ShortsCardItem(
     short: Song,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    var isLiked by remember(short.id) { mutableStateOf(false) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -159,7 +149,7 @@ fun ShortsCardItem(
             )
         }
 
-        // Cột nút tương tác bên phải: Like, Comment, Share
+        // Cột nút tương tác bên phải: Like, Share
         Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -167,9 +157,32 @@ fun ShortsCardItem(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            ActionIcon(icon = Icons.Filled.ThumbUp, label = "Thích")
-            ActionIcon(icon = Icons.Filled.Comment, label = "Bình luận")
-            ActionIcon(icon = Icons.Filled.Share, label = "Chia sẻ")
+            ActionIcon(
+                icon = Icons.Filled.ThumbUp,
+                label = if (isLiked) "Đã thích" else "Thích",
+                iconTint = if (isLiked) AccentRed else Color.White,
+                onClick = {
+                    isLiked = !isLiked
+                    val msg = if (isLiked) "Đã thích Short này" else "Đã bỏ thích"
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                }
+            )
+
+            ActionIcon(
+                icon = Icons.Filled.Share,
+                label = "Chia sẻ",
+                iconTint = Color.White,
+                onClick = {
+                    try {
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_SUBJECT, short.title)
+                            putExtra(Intent.EXTRA_TEXT, "${short.title}\nhttps://youtube.com/shorts/${short.id}")
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Chia sẻ Short"))
+                    } catch (_: Exception) {}
+                }
+            )
         }
 
         // Thông tin kênh & Tiêu đề ở góc dưới bên trái
@@ -240,9 +253,14 @@ fun ShortsCardItem(
 @Composable
 private fun ActionIcon(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String
+    label: String,
+    iconTint: Color = Color.White,
+    onClick: () -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.clickable(onClick = onClick)
+    ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -253,7 +271,7 @@ private fun ActionIcon(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = Color.White,
+                tint = iconTint,
                 modifier = Modifier.size(24.dp)
             )
         }

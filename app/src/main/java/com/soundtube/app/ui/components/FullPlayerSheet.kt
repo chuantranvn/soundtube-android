@@ -73,14 +73,20 @@ import com.soundtube.app.player.BackgroundPlayerManager
 import com.soundtube.app.data.EpisodeManager
 import com.soundtube.app.data.PlaybackProgressManager
 import com.soundtube.app.data.model.Song
+import com.soundtube.app.ui.theme.AccentGradient
 import com.soundtube.app.ui.theme.AccentPurple
 import com.soundtube.app.ui.theme.AccentRed
+import com.soundtube.app.ui.theme.AccentSoftBg
 import com.soundtube.app.ui.theme.DarkBackground
 import com.soundtube.app.ui.theme.DarkSurface
 import com.soundtube.app.ui.theme.DarkSurfaceVariant
+import com.soundtube.app.ui.theme.NeuIconButton
+import com.soundtube.app.ui.theme.QuantumFieldBackground
+import com.soundtube.app.ui.theme.QuantumWaveDivider
 import com.soundtube.app.ui.theme.TextMuted
 import com.soundtube.app.ui.theme.TextPrimary
 import com.soundtube.app.ui.theme.TextSecondary
+import com.soundtube.app.ui.theme.neumorphic
 
 @Composable
 fun FullPlayerSheet(
@@ -106,7 +112,7 @@ fun FullPlayerSheet(
     onSeekTo: (Long) -> Unit,
     onSeekForward: () -> Unit,
     onSeekBackward: () -> Unit,
-    onPlaySong: (Song) -> Unit = {},
+    onPlaySong: (Song, List<Song>) -> Unit = { _, _ -> },
     onRestartFromBeginning: () -> Unit = {}
 ) {
     AnimatedVisibility(
@@ -131,13 +137,16 @@ fun FullPlayerSheet(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            DarkSurfaceVariant,
+                            DarkSurface,
                             DarkBackground,
                             DarkBackground
                         )
                     )
                 )
         ) {
+            // Trường năng lượng & quỹ đạo lượng tử nền cho FullPlayerSheet
+            QuantumFieldBackground()
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -173,24 +182,26 @@ fun FullPlayerSheet(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Bộ chọn chuyển đổi chế độ [ Âm thanh ] / [ Video ] chuẩn YouTube Music
+                // Bộ chọn chuyển đổi chế độ [ Âm thanh ] / [ Video ] chuẩn trắng đục neumorphic
                 Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(Color(0xFF242424))
-                        .padding(3.dp),
+                        .neumorphic(shape = RoundedCornerShape(24.dp), elevation = 3.dp, pressed = true)
+                        .padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(if (!isVideoMode) AccentRed else Color.Transparent)
+                            .then(
+                                if (!isVideoMode) Modifier.background(AccentGradient)
+                                else Modifier
+                            )
                             .clickable { if (isVideoMode) onToggleVideoMode() }
-                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                            .padding(horizontal = 18.dp, vertical = 7.dp)
                     ) {
                         Text(
                             text = "Âm thanh",
-                            color = if (!isVideoMode) Color.White else TextMuted,
+                            color = if (!isVideoMode) Color.White else TextSecondary,
                             fontSize = 13.sp,
                             fontWeight = if (!isVideoMode) FontWeight.Bold else FontWeight.Medium
                         )
@@ -199,21 +210,24 @@ fun FullPlayerSheet(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(if (isVideoMode) AccentRed else Color.Transparent)
+                            .then(
+                                if (isVideoMode) Modifier.background(AccentGradient)
+                                else Modifier
+                            )
                             .clickable { if (!isVideoMode) onToggleVideoMode() }
-                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                            .padding(horizontal = 18.dp, vertical = 7.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Filled.PlayArrow,
                                 contentDescription = null,
-                                tint = if (isVideoMode) Color.White else TextMuted,
+                                tint = if (isVideoMode) Color.White else TextSecondary,
                                 modifier = Modifier.size(15.dp)
                             )
                             Spacer(modifier = Modifier.width(3.dp))
                             Text(
                                 text = "Video",
-                                color = if (isVideoMode) Color.White else TextMuted,
+                                color = if (isVideoMode) Color.White else TextSecondary,
                                 fontSize = 13.sp,
                                 fontWeight = if (isVideoMode) FontWeight.Bold else FontWeight.Medium
                             )
@@ -372,6 +386,14 @@ fun FullPlayerSheet(
                     fontWeight = FontWeight.Medium
                 )
 
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Sóng giao thoa lượng tử (Quantum Wave Interference) trang trí dưới tên kênh
+                QuantumWaveDivider(
+                    modifier = Modifier.padding(horizontal = 36.dp),
+                    height = 18.dp
+                )
+
                 // Nhắc nhở tiếp tục nghe dở từ phút/giây lần trước
                 val formattedResumeTime = remember(song.id) {
                     PlaybackProgressManager.getFormattedProgress(song.id)
@@ -380,9 +402,8 @@ fun FullPlayerSheet(
                     Spacer(modifier = Modifier.height(8.dp))
                     Row(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Color(0xFF2E1A1A))
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                            .neumorphic(shape = RoundedCornerShape(20.dp), elevation = 3.dp)
+                            .padding(horizontal = 14.dp, vertical = 7.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -394,14 +415,14 @@ fun FullPlayerSheet(
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Đang tiếp tục từ $formattedResumeTime",
-                            color = Color(0xFFFFD2D2),
+                            color = TextSecondary,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "• Nghe lại từ đầu",
-                            color = Color(0xFFFF6E6E),
+                            color = AccentRed,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.clickable { onRestartFromBeginning() }
@@ -457,76 +478,97 @@ fun FullPlayerSheet(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Hàng nút điều khiển: Prev - Lùi 10s - Play/Pause - Tiến 10s - Next
+                // Hàng nút điều khiển Neumorphic + Lượng tử: Prev - Lùi 10s - Play/Pause - Tiến 10s - Next
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onPrevious) {
+                    NeuIconButton(
+                        onClick = onPrevious,
+                        size = 46.dp,
+                        elevation = 4.dp
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.SkipPrevious,
                             contentDescription = "Bài trước",
                             tint = TextPrimary,
-                            modifier = Modifier.size(34.dp)
+                            modifier = Modifier.size(26.dp)
                         )
                     }
 
-                    IconButton(onClick = onSeekBackward) {
+                    NeuIconButton(
+                        onClick = onSeekBackward,
+                        size = 46.dp,
+                        elevation = 4.dp
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.Replay10,
                             contentDescription = "Tua lùi 10s",
                             tint = TextPrimary,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(25.dp)
                         )
                     }
 
-                    // Nút Play / Pause tròn to nổi bật
+                    // Nút Play / Pause: Đĩa Neumorphic + Vòng quỹ đạo lượng tử + Lõi Gradient
                     Box(
                         contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(68.dp)
-                            .shadow(8.dp, CircleShape)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.linearGradient(
-                                    listOf(AccentRed, AccentPurple)
-                                )
-                            )
+                        modifier = Modifier.size(86.dp)
                     ) {
-                        if (isBuffering) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(34.dp),
-                                color = Color.White,
-                                strokeWidth = 3.dp
-                            )
-                        } else {
-                            IconButton(onClick = onTogglePlayPause) {
-                                Icon(
-                                    imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                                    contentDescription = if (isPlaying) "Tạm dừng" else "Phát",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(38.dp)
-                                )
+                        QuantumOrbitalHalo(size = 86.dp)
+                        NeuIconButton(
+                            onClick = onTogglePlayPause,
+                            size = 72.dp,
+                            elevation = 5.dp
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .size(58.dp)
+                                    .clip(CircleShape)
+                                    .background(AccentGradient)
+                            ) {
+                                if (isBuffering) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(30.dp),
+                                        color = Color.White,
+                                        strokeWidth = 3.dp
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                                        contentDescription = if (isPlaying) "Tạm dừng" else "Phát",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(34.dp)
+                                    )
+                                }
                             }
                         }
                     }
 
-                    IconButton(onClick = onSeekForward) {
+                    NeuIconButton(
+                        onClick = onSeekForward,
+                        size = 46.dp,
+                        elevation = 4.dp
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.Forward10,
                             contentDescription = "Tua tới 10s",
                             tint = TextPrimary,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(25.dp)
                         )
                     }
 
-                    IconButton(onClick = onNext) {
+                    NeuIconButton(
+                        onClick = onNext,
+                        size = 46.dp,
+                        elevation = 4.dp
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.SkipNext,
                             contentDescription = "Bài tiếp theo",
                             tint = TextPrimary,
-                            modifier = Modifier.size(34.dp)
+                            modifier = Modifier.size(26.dp)
                         )
                     }
                 }
@@ -605,29 +647,29 @@ fun FullPlayerSheet(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Card nhắc nhở tính năng phát khi tắt màn hình
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = DarkSurface)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .neumorphic(shape = RoundedCornerShape(16.dp), elevation = 4.dp)
                 ) {
                     Text(
                         text = "🔒 Bạn có thể khóa/tắt màn hình hoặc dùng app khác, âm thanh vẫn phát ngầm mượt mà!",
                         color = TextSecondary,
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(12.dp)
+                        modifier = Modifier.padding(14.dp)
                     )
                 }
 
                 // Đề xuất Tập kế tiếp (Dành cho nghe truyện / audiobook / series)
                 if (nextEpisode != null) {
                     Spacer(modifier = Modifier.height(14.dp))
-                    Card(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .clickable { onPlaySong(nextEpisode) },
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF241515))
+                            .neumorphic(shape = RoundedCornerShape(18.dp), elevation = 5.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .clickable { onPlaySong(nextEpisode, seriesEpisodes.ifEmpty { listOf(nextEpisode) }) }
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Row(
@@ -710,12 +752,12 @@ fun FullPlayerSheet(
                     Spacer(modifier = Modifier.height(12.dp))
                     var isSeriesExpanded by remember { mutableStateOf(false) }
 
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = DarkSurface)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .neumorphic(shape = RoundedCornerShape(18.dp), elevation = 5.dp)
                     ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
+                        Column(modifier = Modifier.padding(14.dp)) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -757,21 +799,21 @@ fun FullPlayerSheet(
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(if (isCurrent) Color(0xFF381515) else Color.Transparent)
-                                                .clickable { onPlaySong(ep) }
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(if (isCurrent) AccentSoftBg else Color.Transparent)
+                                                .clickable { onPlaySong(ep, seriesEpisodes) }
                                                 .padding(8.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Box(
                                                 modifier = Modifier
-                                                    .clip(RoundedCornerShape(4.dp))
-                                                    .background(if (isCurrent) AccentRed else Color(0xFF2C2C2C))
-                                                    .padding(horizontal = 6.dp, vertical = 3.dp)
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(if (isCurrent) AccentRed else DarkSurfaceVariant)
+                                                    .padding(horizontal = 7.dp, vertical = 3.dp)
                                             ) {
                                                 Text(
                                                     text = epBadge,
-                                                    color = Color.White,
+                                                    color = if (isCurrent) Color.White else TextPrimary,
                                                     fontSize = 10.sp,
                                                     fontWeight = FontWeight.Bold
                                                 )
@@ -780,7 +822,7 @@ fun FullPlayerSheet(
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Text(
                                                     text = ep.title,
-                                                    color = if (isCurrent) Color(0xFFFF8A80) else TextPrimary,
+                                                    color = if (isCurrent) AccentRed else TextPrimary,
                                                     fontSize = 12.5.sp,
                                                     fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
                                                     maxLines = 1,

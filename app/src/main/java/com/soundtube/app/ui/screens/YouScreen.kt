@@ -57,6 +57,7 @@ import coil.compose.AsyncImage
 import com.soundtube.app.data.EpisodeManager
 import com.soundtube.app.data.PlaybackProgressManager
 import com.soundtube.app.data.model.Song
+import com.soundtube.app.ui.theme.AccentGradient
 import com.soundtube.app.ui.theme.AccentPurple
 import com.soundtube.app.ui.theme.AccentRed
 import com.soundtube.app.ui.theme.DarkBackground
@@ -65,6 +66,7 @@ import com.soundtube.app.ui.theme.DarkSurfaceVariant
 import com.soundtube.app.ui.theme.TextMuted
 import com.soundtube.app.ui.theme.TextPrimary
 import com.soundtube.app.ui.theme.TextSecondary
+import com.soundtube.app.ui.theme.neumorphic
 
 @Composable
 fun YouScreen(
@@ -76,7 +78,7 @@ fun YouScreen(
     isSyncEnabled: Boolean,
     onToggleAutoplay: () -> Unit,
     onToggleSync: () -> Unit,
-    onPlaySong: (Song) -> Unit,
+    onPlaySong: (Song, List<Song>) -> Unit,
     onOpenLogin: () -> Unit,
     onLogout: () -> Unit,
     onClearHistory: () -> Unit,
@@ -85,40 +87,49 @@ fun YouScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(DarkBackground)
             .verticalScroll(rememberScrollState())
             .padding(bottom = 120.dp)
     ) {
-        // 1. Thẻ thông tin tài khoản người dùng
+        // 1. Thẻ thông tin tài khoản người dùng (Khung trắng đục lăng kính lượng tử)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 10.dp)
+                .neumorphic(shape = RoundedCornerShape(22.dp), elevation = 5.dp, quantumGlow = true)
+                .padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF2C2C2C)),
+                modifier = Modifier.size(74.dp),
                 contentAlignment = Alignment.Center
             ) {
-                if (!userAvatar.isNullOrBlank()) {
-                    AsyncImage(
-                        model = userAvatar,
-                        contentDescription = "Avatar",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Filled.AccountCircle,
-                        contentDescription = null,
-                        tint = if (isLoggedIn) AccentRed else TextSecondary,
-                        modifier = Modifier.size(64.dp)
-                    )
+                com.soundtube.app.ui.components.QuantumOrbitalHalo(size = 74.dp)
+                Box(
+                    modifier = Modifier
+                        .size(62.dp)
+                        .neumorphic(shape = CircleShape, elevation = 3.dp)
+                        .padding(3.dp)
+                        .clip(CircleShape)
+                        .background(DarkSurfaceVariant),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (!userAvatar.isNullOrBlank()) {
+                        AsyncImage(
+                            model = userAvatar,
+                            contentDescription = "Avatar",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Filled.AccountCircle,
+                            contentDescription = null,
+                            tint = if (isLoggedIn) AccentRed else TextSecondary,
+                            modifier = Modifier.size(56.dp)
+                        )
+                    }
                 }
             }
 
@@ -235,13 +246,15 @@ fun YouScreen(
                     Column(
                         modifier = Modifier
                             .width(150.dp)
-                            .clickable { onPlaySong(song) }
+                            .clickable { onPlaySong(song, watchHistory) }
                     ) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(16f / 9f)
-                                .clip(RoundedCornerShape(8.dp))
+                                .neumorphic(shape = RoundedCornerShape(12.dp), elevation = 4.dp)
+                                .padding(3.dp)
+                                .clip(RoundedCornerShape(10.dp))
                                 .background(DarkSurface)
                         ) {
                             AsyncImage(
@@ -347,50 +360,32 @@ fun YouScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // 3. Danh sách phát & Tiện ích
+        // 3. Tính Năng & Tùy Chọn
         Text(
-            text = "Danh sách phát",
+            text = "Tính năng phát nhạc",
             color = TextPrimary,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
         )
 
-        PlaylistItem(icon = Icons.Filled.WatchLater, title = "Xem sau", subtitle = "Đã lưu từ YouTube")
-        PlaylistItem(icon = Icons.Filled.ThumbUp, title = "Video đã thích", subtitle = "Tự động đồng bộ")
-        PlaylistItem(icon = Icons.Filled.PlaylistAdd, title = "Danh sách phát mới", subtitle = "Tạo playlist cá nhân")
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // 4. Các Tính Năng Nâng Cấp (SoundTube Pro Upgrades)
-        Text(
-            text = "Tính năng nâng cấp (Miễn phí)",
-            color = TextPrimary,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-        )
-
-        Card(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = DarkSurface)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .neumorphic(shape = RoundedCornerShape(18.dp), elevation = 5.dp)
         ) {
-            Column(modifier = Modifier.padding(14.dp)) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 ProFeatureRow(
                     icon = Icons.Filled.Lock,
-                    title = "Phát ngầm khi tắt màn hình",
-                    desc = "Khóa điện thoại âm thanh vẫn phát mượt mà",
-                    isActive = true
+                    title = "Phát âm thanh nền",
+                    desc = "Hỗ trợ phát âm thanh khi chuyển ứng dụng hoặc tắt màn hình"
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 ProFeatureRow(
                     icon = Icons.Filled.Shield,
-                    title = "Chặn quảng cáo tự động",
-                    desc = "Xem và nghe không lo bị gián đoạn",
-                    isActive = true
+                    title = "Trải nghiệm nghe liền mạch",
+                    desc = "Tối ưu đường truyền và bộ nhớ đệm phát nhạc liên tục"
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
@@ -470,56 +465,31 @@ fun YouScreen(
                 }
             }
         }
-    }
-}
 
-@Composable
-private fun PlaylistItem(
-    icon: ImageVector,
-    title: String,
-    subtitle: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // 4. Thông tin ứng dụng
         Box(
             modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(DarkSurface),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .neumorphic(shape = RoundedCornerShape(18.dp), elevation = 5.dp)
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = TextPrimary,
-                modifier = Modifier.size(22.dp)
-            )
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "QuarkTube v1.0.0",
+                    color = TextPrimary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Trình phát âm thanh và video nền tối ưu hoá hiệu năng cho thiết bị Android.",
+                    color = TextSecondary,
+                    fontSize = 12.sp
+                )
+            }
         }
-        Spacer(modifier = Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                color = TextPrimary,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                text = subtitle,
-                color = TextSecondary,
-                fontSize = 12.sp
-            )
-        }
-        Icon(
-            imageVector = Icons.Filled.ChevronRight,
-            contentDescription = null,
-            tint = TextMuted,
-            modifier = Modifier.size(20.dp)
-        )
     }
 }
 
@@ -527,8 +497,7 @@ private fun PlaylistItem(
 private fun ProFeatureRow(
     icon: ImageVector,
     title: String,
-    desc: String,
-    isActive: Boolean
+    desc: String
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),

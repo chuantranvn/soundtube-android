@@ -368,10 +368,25 @@ object YouTubeExtractor {
                 }
             }
         }
-        if (watchedPercent > 0 && durationSec > 0) {
-            val posMs = (durationSec * 1000L * watchedPercent) / 100
-            PlaybackProgressManager.saveProgress(videoId, posMs, durationSec * 1000L)
-            Log.d(TAG, "Đã khôi phục tiến trình dừng (videoRenderer) cho $videoId: $posMs ms ($watchedPercent%)")
+        if (watchedPercent > 0) {
+            PlaybackProgressManager.setRemoteWatchedPercent(videoId, watchedPercent)
+            Log.d(TAG, "Ghi nhận thanh đỏ từ YouTube Web (videoRenderer) cho $videoId: $watchedPercent%")
+        }
+
+        // Parse startTimeSeconds từ navigationEndpoint.watchEndpoint (vị trí xem dở chính xác từ YouTube Web)
+        val navEndpoint = v.optJSONObject("navigationEndpoint")
+        val watchEndpoint = navEndpoint?.optJSONObject("watchEndpoint")
+        val startTimeSec = watchEndpoint?.optInt("startTimeSeconds", 0) ?: 0
+        if (startTimeSec > 0) {
+            PlaybackProgressManager.setRemoteExactProgress(videoId, startTimeSec)
+            Log.d(TAG, "Đồng bộ vị trí chính xác từ YouTube Web cho $videoId: ${startTimeSec}s")
+        } else if (watchedPercent > 0 && durationSec > 0) {
+            // Fallback: nếu không có startTimeSeconds, ước lượng từ percentDurationWatched
+            val estimatedSec = (durationSec * watchedPercent / 100).toInt()
+            if (estimatedSec > 3) {
+                PlaybackProgressManager.setRemoteExactProgress(videoId, estimatedSec)
+                Log.d(TAG, "Ước lượng vị trí từ phần trăm cho $videoId: ${estimatedSec}s (~$watchedPercent%)")
+            }
         }
 
         return Song(
@@ -418,7 +433,7 @@ object YouTubeExtractor {
             ?.optJSONObject("image")
             ?.optJSONArray("sources")
         if (avatarSources != null && avatarSources.length() > 0) {
-            avatarUrl = avatarSources.getJSONObject(0).optString("url", null)
+            avatarUrl = avatarSources.getJSONObject(0).optString("url").takeIf { it.isNotBlank() }
         }
 
         val a11y = meta?.optJSONObject("image")
@@ -500,11 +515,41 @@ object YouTubeExtractor {
             }
         }
 
-        // Lưu tiến trình xem vào PlaybackProgressManager nếu có
-        if (watchedPercent > 0 && durationSec > 0) {
-            val posMs = (durationSec * 1000L * watchedPercent) / 100
-            PlaybackProgressManager.saveProgress(videoId, posMs, durationSec * 1000L)
-            Log.d(TAG, "Đã khôi phục vị trí dừng trên web (lockupViewModel) cho $videoId: $posMs ms ($watchedPercent%) / $durationSec s")
+        // Ghi nhận thanh đỏ ước lượng từ YouTube Web để hiển thị Thumbnail
+        if (watchedPercent > 0) {
+            PlaybackProgressManager.setRemoteWatchedPercent(videoId, watchedPercent)
+            Log.d(TAG, "Ghi nhận thanh đỏ từ YouTube Web (lockupViewModel) cho $videoId: $watchedPercent%")
+        }
+
+        // Parse startTimeSeconds từ rendererContext hoặc onTap command (vị trí xem dở chính xác từ YouTube Web)
+        var startTimeSec = 0
+        // Dạng 1: rendererContext.commandContext.onTap.innertubeCommand.watchEndpoint.startTimeSeconds
+        val rendererCtx = lockup.optJSONObject("rendererContext")
+        val onTapCmd = rendererCtx?.optJSONObject("commandContext")?.optJSONObject("onTap")
+            ?: rendererCtx?.optJSONObject("onTap")
+        val watchEp = onTapCmd?.optJSONObject("innertubeCommand")?.optJSONObject("watchEndpoint")
+            ?: onTapCmd?.optJSONObject("watchEndpoint")
+        if (watchEp != null) {
+            startTimeSec = watchEp.optInt("startTimeSeconds", 0)
+        }
+        // Dạng 2: contentId cùng cấp với các field khác
+        if (startTimeSec <= 0) {
+            val navEp = lockup.optJSONObject("onTap")?.optJSONObject("innertubeCommand")?.optJSONObject("watchEndpoint")
+            if (navEp != null) {
+                startTimeSec = navEp.optInt("startTimeSeconds", 0)
+            }
+        }
+
+        if (startTimeSec > 0) {
+            PlaybackProgressManager.setRemoteExactProgress(videoId, startTimeSec)
+            Log.d(TAG, "Đồng bộ vị trí chính xác từ YouTube Web (lockup) cho $videoId: ${startTimeSec}s")
+        } else if (watchedPercent > 0 && durationSec > 0) {
+            // Fallback: ước lượng từ percentDurationWatched
+            val estimatedSec = (durationSec * watchedPercent / 100).toInt()
+            if (estimatedSec > 3) {
+                PlaybackProgressManager.setRemoteExactProgress(videoId, estimatedSec)
+                Log.d(TAG, "Ước lượng vị trí từ phần trăm (lockup) cho $videoId: ${estimatedSec}s (~$watchedPercent%)")
+            }
         }
 
         return Song(

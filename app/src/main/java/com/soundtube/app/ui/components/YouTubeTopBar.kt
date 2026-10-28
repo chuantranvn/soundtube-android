@@ -1,164 +1,175 @@
 package com.soundtube.app.ui.components
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.StartOffset
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.ui.res.painterResource
-import com.soundtube.app.R
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Cast
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.soundtube.app.R
 import com.soundtube.app.ui.theme.AccentRed
-import com.soundtube.app.ui.theme.DarkBackground
-import com.soundtube.app.ui.theme.TextPrimary
+import com.soundtube.app.ui.theme.NeuIconButton
+import com.soundtube.app.ui.theme.TextSecondary
 
 @Composable
 fun YouTubeTopBar(
     onSearchClick: () -> Unit,
     onAvatarClick: () -> Unit,
+    onLogoClick: () -> Unit = {},
+    isSearchActive: Boolean = false,
     userAvatarUrl: String? = null,
     isLoggedIn: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    // Hiệu ứng sóng âm Equalizer (|||) nhấp nhô mượt mà ngay trước chữ "Tube" trong cụm Logo
+    val infiniteTransition = rememberInfiniteTransition(label = "quarktube_logo_eq")
+    val eqBar1 by infiniteTransition.animateFloat(
+        initialValue = 12f,
+        targetValue = 37f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 440, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "eqBar1"
+    )
+    val eqBar2 by infiniteTransition.animateFloat(
+        initialValue = 39f,
+        targetValue = 14f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 360, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+            initialStartOffset = StartOffset(110)
+        ),
+        label = "eqBar2"
+    )
+    val eqBar3 by infiniteTransition.animateFloat(
+        initialValue = 15f,
+        targetValue = 35f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+            initialStartOffset = StartOffset(230)
+        ),
+        label = "eqBar3"
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(DarkBackground)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Logo QuarkTube (Icon QuarkTube tròn 3D + Chữ QuarkTube)
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.clickable(onClick = {})
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_quarktube_logo),
-                contentDescription = "QuarkTube",
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-            )
+        // Cụm Logo QuarkTube: bấm vào trả về Home + hiệu ứng Equalizer (|||) nhấp nhô trước chữ Tube
+        Image(
+            painter = painterResource(id = R.drawable.img_quarktube_logo),
+            contentDescription = "QuarkTube Logo - Về trang chủ",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .height(42.dp)
+                .aspectRatio(720f / 168f)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onLogoClick
+                )
+                .drawWithContent {
+                    drawContent()
+                    // Hệ tọa độ chuẩn 720x168 của img_quarktube_logo.png:
+                    // Viên nang Tube bắt đầu tại x=412, y=39 (cao 90 -> tâm dọc y=84)
+                    // Ba thanh sóng âm nằm tại x = 438, 448, 458 (rộng 5.5)
+                    val scaleX = size.width / 720f
+                    val scaleY = size.height / 168f
+                    val barW = 5.6f * scaleX
+                    val radius = CornerRadius(barW / 2f, barW / 2f)
+                    val centerY = 84f * scaleY
 
-            Spacer(modifier = Modifier.width(8.dp))
+                    val bars = listOf(
+                        Triple(438f, eqBar1, 0.90f),
+                        Triple(448f, eqBar2, 1.00f),
+                        Triple(458f, eqBar3, 0.93f)
+                    )
+                    bars.forEach { (svgX, svgH, alpha) ->
+                        val barH = svgH * scaleY
+                        val left = svgX * scaleX
+                        val top = centerY - barH / 2f
+                        drawRoundRect(
+                            color = Color.White.copy(alpha = alpha),
+                            topLeft = Offset(left, top),
+                            size = Size(barW, barH),
+                            cornerRadius = radius
+                        )
+                    }
+                }
+        )
 
-            Text(
-                text = "QuarkTube",
-                color = TextPrimary,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-0.5).sp,
-                fontSize = 19.sp
-            )
-        }
-
-        // Cụm nút bên phải: Cast, Chuông thông báo (badge đỏ), Tìm kiếm, Avatar
+        // Cụm nút bên phải: Tìm kiếm, Avatar
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = {},
-                modifier = Modifier.size(38.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Cast,
-                    contentDescription = "Truyền",
-                    tint = TextPrimary,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-
-            // Chuông thông báo kèm badge đỏ số "5" y hệt ảnh mẫu
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.size(38.dp)
-            ) {
-                IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons.Filled.Notifications,
-                        contentDescription = "Thông báo",
-                        tint = TextPrimary,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 4.dp, end = 4.dp)
-                        .size(15.dp)
-                        .clip(CircleShape)
-                        .background(AccentRed),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "5",
-                        color = Color.White,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            IconButton(
+            NeuIconButton(
                 onClick = onSearchClick,
-                modifier = Modifier.size(38.dp)
+                size = 40.dp,
+                elevation = 3.dp,
+                selected = isSearchActive,
+                quantumGlow = isSearchActive
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Search,
-                    contentDescription = "Tìm kiếm",
-                    tint = TextPrimary,
-                    modifier = Modifier.size(23.dp)
-                )
+                QuantumSearchIcon(size = 21.dp)
             }
 
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(14.dp))
 
-            // Avatar tài khoản
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onAvatarClick)
+            // Avatar tài khoản (viền neumorphic nổi)
+            NeuIconButton(
+                onClick = onAvatarClick,
+                size = 38.dp,
+                elevation = 3.dp
             ) {
                 if (!userAvatarUrl.isNullOrBlank()) {
                     AsyncImage(
                         model = userAvatarUrl,
                         contentDescription = "Tài khoản",
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Filled.AccountCircle,
                         contentDescription = "Tài khoản",
-                        tint = if (isLoggedIn) AccentRed else TextPrimary,
+                        tint = if (isLoggedIn) AccentRed else TextSecondary,
                         modifier = Modifier.size(28.dp)
                     )
                 }

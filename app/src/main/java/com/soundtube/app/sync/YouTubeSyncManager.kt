@@ -63,6 +63,17 @@ object YouTubeSyncManager {
             }
             super.onWindowVisibilityChanged(visibility)
         }
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            val widthMode = MeasureSpec.getMode(widthMeasureSpec)
+            val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+            val widthSize = MeasureSpec.getSize(widthMeasureSpec)
+            val heightSize = MeasureSpec.getSize(heightMeasureSpec)
+
+            val finalWidth = if (widthMode != MeasureSpec.UNSPECIFIED && widthSize > 0) widthSize else 1
+            val finalHeight = if (heightMode != MeasureSpec.UNSPECIFIED && heightSize > 0) heightSize else 1
+            setMeasuredDimension(finalWidth, finalHeight)
+        }
     }
 
     /**

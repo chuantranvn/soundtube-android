@@ -32,10 +32,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.soundtube.app.ui.theme.AccentGradient
+import com.soundtube.app.ui.theme.AccentRed
 import com.soundtube.app.ui.theme.DarkBackground
-import com.soundtube.app.ui.theme.DarkSurface
+import com.soundtube.app.ui.theme.NeuIconButton
 import com.soundtube.app.ui.theme.TextMuted
 import com.soundtube.app.ui.theme.TextPrimary
+import com.soundtube.app.ui.theme.neumorphic
+import androidx.compose.foundation.shape.RoundedCornerShape
 
 enum class YouTubeNavTab {
     HOME,
@@ -52,88 +56,100 @@ fun YouTubeBottomNav(
     userAvatarUrl: String? = null,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    // Thanh điều hướng nổi dạng neumorphic lượng tử (bo tròn, viền lăng kính, tách khỏi mép màn hình)
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(DarkBackground)
-            .border(width = 0.5.dp, color = DarkSurface)
             .navigationBarsPadding()
-            .height(52.dp),
+            .padding(start = 14.dp, end = 14.dp, top = 6.dp, bottom = 10.dp)
+    ) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .neumorphic(shape = RoundedCornerShape(26.dp), elevation = 6.dp, quantumGlow = true)
+            .padding(horizontal = 6.dp),
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // 1. Trang chủ
-        NavItem(
-            icon = Icons.Filled.Home,
+        // 1. Trang chủ (Icon Ngôi nhà Lượng tử)
+        NavItemContainer(
             label = "Trang chủ",
             isSelected = selectedTab == YouTubeNavTab.HOME,
             onClick = { onTabSelected(YouTubeNavTab.HOME) }
-        )
-
-        // 2. Shorts
-        NavItem(
-            icon = Icons.Filled.FlashOn,
-            label = "Shorts",
-            isSelected = selectedTab == YouTubeNavTab.SHORTS,
-            onClick = { onTabSelected(YouTubeNavTab.SHORTS) }
-        )
-
-        // 3. Nút Tạo (+) ở chính giữa
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(Color(0xFF272727))
-                .clickable { onTabSelected(YouTubeNavTab.CREATE) }
         ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = "Tạo / Thêm",
-                tint = Color.White,
-                modifier = Modifier.size(24.dp)
+            QuantumHomeIcon(
+                isSelected = selectedTab == YouTubeNavTab.HOME,
+                size = 23.dp
             )
         }
 
-        // 4. Kênh đăng ký
-        NavItem(
-            icon = Icons.Filled.Subscriptions,
+        // 2. Shorts (Icon Xung năng lượng Lượng tử)
+        NavItemContainer(
+            label = "Shorts",
+            isSelected = selectedTab == YouTubeNavTab.SHORTS,
+            onClick = { onTabSelected(YouTubeNavTab.SHORTS) }
+        ) {
+            QuantumShortsIcon(
+                isSelected = selectedTab == YouTubeNavTab.SHORTS,
+                size = 23.dp
+            )
+        }
+
+        // 3. Nút Tạo (+) ở chính giữa: đĩa neumorphic nổi + lõi lượng tử
+        NeuIconButton(
+            onClick = { onTabSelected(YouTubeNavTab.CREATE) },
+            size = 46.dp,
+            elevation = 4.dp,
+            selected = selectedTab == YouTubeNavTab.CREATE
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(AccentGradient)
+            ) {
+                QuantumPlusIcon(size = 22.dp)
+            }
+        }
+
+        // 4. Kênh đăng ký (Icon Đa tầng Lượng tử)
+        NavItemContainer(
             label = "Kênh đăng ký",
             isSelected = selectedTab == YouTubeNavTab.SUBSCRIPTIONS,
             onClick = { onTabSelected(YouTubeNavTab.SUBSCRIPTIONS) }
-        )
+        ) {
+            QuantumSubscriptionsIcon(
+                isSelected = selectedTab == YouTubeNavTab.SUBSCRIPTIONS,
+                size = 23.dp
+            )
+        }
 
         // 5. Bạn (Trang cá nhân / Thư viện)
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .clickable { onTabSelected(YouTubeNavTab.YOU) }
-                .padding(vertical = 4.dp)
+        NavItemContainer(
+            label = "Bạn",
+            isSelected = selectedTab == YouTubeNavTab.YOU,
+            onClick = { onTabSelected(YouTubeNavTab.YOU) }
         ) {
             if (!userAvatarUrl.isNullOrBlank()) {
                 AsyncImage(
                     model = userAvatarUrl,
                     contentDescription = "Bạn",
                     modifier = Modifier
-                        .size(23.dp)
+                        .size(22.dp)
                         .clip(CircleShape)
                 )
             } else {
                 Icon(
                     imageVector = Icons.Filled.AccountCircle,
                     contentDescription = "Bạn",
-                    tint = if (selectedTab == YouTubeNavTab.YOU) Color.White else TextMuted,
-                    modifier = Modifier.size(23.dp)
+                    tint = if (selectedTab == YouTubeNavTab.YOU) AccentRed else TextMuted,
+                    modifier = Modifier.size(22.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = "Bạn",
-                fontSize = 10.sp,
-                color = if (selectedTab == YouTubeNavTab.YOU) Color.White else TextMuted,
-                fontWeight = if (selectedTab == YouTubeNavTab.YOU) FontWeight.SemiBold else FontWeight.Normal
-            )
         }
+    }
     }
 }
 
@@ -144,23 +160,43 @@ private fun NavItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(vertical = 4.dp)
-    ) {
+    NavItemContainer(label = label, isSelected = isSelected, onClick = onClick) {
         Icon(
             imageVector = icon,
             contentDescription = label,
-            tint = if (isSelected) Color.White else TextMuted,
-            modifier = Modifier.size(23.dp)
+            tint = if (isSelected) AccentRed else TextMuted,
+            modifier = Modifier.size(22.dp)
         )
+    }
+}
+
+/** Mục điều hướng: khi được chọn sẽ "lõm" xuống thành ô neumorphic và đổi màu accent. */
+@Composable
+private fun NavItemContainer(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    icon: @Composable () -> Unit
+) {
+    val shape = RoundedCornerShape(14.dp)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .then(
+                if (isSelected) Modifier.neumorphic(shape = shape, elevation = 3.dp, pressed = true)
+                else Modifier
+            )
+            .clip(shape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 5.dp)
+    ) {
+        icon()
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = label,
             fontSize = 10.sp,
-            color = if (isSelected) Color.White else TextMuted,
+            maxLines = 1,
+            color = if (isSelected) TextPrimary else TextMuted,
             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
         )
     }

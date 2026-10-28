@@ -1,0 +1,192 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Bóng tối mềm (góc dưới phải) -->
+    <path android:pathData="M24,58 a34,34 0 1,0 68,0 a34,34 0 1,0 -68,0Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="58"
+                android:centerY="58"
+                android:gradientRadius="34">
+                <item android:offset="0" android:color="#669FB0C7" />
+                <item android:offset="0.75" android:color="#409FB0C7" />
+                <item android:offset="1" android:color="#009FB0C7" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Bóng sáng trắng tinh (góc trên trái) -->
+    <path android:pathData="M16,50 a34,34 0 1,0 68,0 a34,34 0 1,0 -68,0Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="50"
+                android:centerY="50"
+                android:gradientRadius="34">
+                <item android:offset="0" android:color="#E6FFFFFF" />
+                <item android:offset="0.78" android:color="#B3FFFFFF" />
+                <item android:offset="1" android:color="#00FFFFFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Đĩa sứ trắng đục nổi -->
+    <path
+        android:pathData="M26,54 a28,28 0 1,0 56,0 a28,28 0 1,0 -56,0Z"
+        android:strokeWidth="1.1"
+        android:strokeColor="#EEFFFFFF">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="30"
+                android:startY="30"
+                android:endX="78"
+                android:endY="78">
+                <item android:offset="0" android:color="#FFFFFFFF" />
+                <item android:offset="1" android:color="#FFE4EAF3" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Lõm vào ở giữa (concave well trắng đục) -->
+    <path
+        android:pathData="M35,54 a19,19 0 1,0 38,0 a19,19 0 1,0 -38,0Z"
+        android:strokeWidth="0.8"
+        android:strokeColor="#88FFFFFF">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="38"
+                android:startY="38"
+                android:endX="70"
+                android:endY="70">
+                <item android:offset="0" android:color="#FFD8E0EC" />
+                <item android:offset="1" android:color="#FFF9FAFD" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Quầng sáng lượng tử ở tâm -->
+    <path android:pathData="M37,54 a17,17 0 1,0 34,0 a17,17 0 1,0 -34,0Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="54"
+                android:centerY="54"
+                android:gradientRadius="17">
+                <item android:offset="0" android:color="#48FF2E63" />
+                <item android:offset="0.6" android:color="#227C4DFF" />
+                <item android:offset="1" android:color="#007C4DFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Quỹ đạo lượng tử 1 (nghiêng -28 độ) -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:rotation="-28">
+        <path
+            android:pathData="M30,54 a24,9.5 0 1,0 48,0 a24,9.5 0 1,0 -48,0Z"
+            android:strokeWidth="1.5"
+            android:fillColor="#00000000">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="30"
+                    android:startY="54"
+                    android:endX="78"
+                    android:endY="54">
+                    <item android:offset="0" android:color="#CCFF2E63" />
+                    <item android:offset="1" android:color="#CC7C4DFF" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- Hạt Quark trên quỹ đạo 1 -->
+        <path
+            android:fillColor="#FFFF2E63"
+            android:pathData="M75.5,54 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M76.9,54 a1.1,1.1 0 1,0 2.2,0 a1.1,1.1 0 1,0 -2.2,0Z" />
+    </group>
+
+    <!-- Quỹ đạo lượng tử 2 (nghiêng +32 độ) -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:rotation="32">
+        <path
+            android:pathData="M31.5,54 a22.5,8.5 0 1,0 45,0 a22.5,8.5 0 1,0 -45,0Z"
+            android:strokeWidth="1.2"
+            android:fillColor="#00000000">
+            <aapt:attr name="android:strokeColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="31.5"
+                    android:startY="54"
+                    android:endX="76.5"
+                    android:endY="54">
+                    <item android:offset="0" android:color="#AA00C6FF" />
+                    <item android:offset="1" android:color="#AA7C4DFF" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- Hạt Quark trên quỹ đạo 2 -->
+        <path
+            android:fillColor="#FF7C4DFF"
+            android:pathData="M29.5,54 a2.1,2.1 0 1,0 4.2,0 a2.1,2.1 0 1,0 -4.2,0Z" />
+    </group>
+
+    <!-- Nét đuôi chữ Q lượng tử -->
+    <path
+        android:pathData="M65,65 L72,72"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round">
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="65"
+                android:startY="65"
+                android:endX="72"
+                android:endY="72">
+                <item android:offset="0" android:color="#FFFF2E63" />
+                <item android:offset="1" android:color="#FF7C4DFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Nút Play bo góc ở tâm -->
+    <path
+        android:pathData="M50.5,47 L50.5,61 L62,54 Z"
+        android:strokeWidth="3.8"
+        android:strokeLineJoin="round">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="48"
+                android:startY="45"
+                android:endX="64"
+                android:endY="63">
+                <item android:offset="0" android:color="#FFFF2E63" />
+                <item android:offset="1" android:color="#FF7C4DFF" />
+            </gradient>
+        </aapt:attr>
+        <aapt:attr name="android:strokeColor">
+            <gradient
+                android:type="linear"
+                android:startX="48"
+                android:startY="45"
+                android:endX="64"
+                android:endY="63">
+                <item android:offset="0" android:color="#FFFF2E63" />
+                <item android:offset="1" android:color="#FF7C4DFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

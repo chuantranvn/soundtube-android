@@ -3,13 +3,16 @@
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <!-- Stylized Q ring with tail -->
+    <!-- Vòng tròn (khớp với icon launcher mới) -->
     <path
         android:fillColor="#FFFFFFFF"
         android:fillType="evenOdd"
-        android:pathData="M11,3 C6.58,3 3,6.58 3,11 C3,15.42 6.58,19 11,19 C12.8,19 14.46,18.4 15.8,17.4 L18.6,20.2 C19,20.6 19.6,20.6 20,20.2 C20.4,19.8 20.4,19.2 20,18.8 L17.3,16.1 C18.37,14.71 19,12.93 19,11 C19,6.58 15.42,3 11,3 Z M11,5 C14.31,5 17,7.69 17,11 C17,14.31 14.31,17 11,17 C7.69,17 5,14.31 5,11 C5,7.69 7.69,5 11,5 Z" />
-    <!-- Centered Play Arrow -->
+        android:pathData="M3,12 a9,9 0 1,0 18,0 a9,9 0 1,0 -18,0Z M5,12 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0Z" />
+    <!-- Nút Play bo góc ở giữa -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M9.5,8 L14,11 L9.5,14 Z" />
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1.2"
+        android:strokeLineJoin="round"
+        android:pathData="M10.2,8.8 L10.2,15.2 L15.4,12 Z" />
 </vector>
