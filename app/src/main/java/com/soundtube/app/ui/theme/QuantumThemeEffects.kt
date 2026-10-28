@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,6 +66,15 @@ import kotlin.math.sin
 fun QuantumFieldBackground(
     modifier: Modifier = Modifier
 ) {
+    val isDark = LocalThemeIsDark.current
+    val topColor = BgGradientTop
+    val upperMidColor = BgGradientUpperMid
+    val lowerMidColor = BgGradientLowerMid
+    val bottomColor = BgGradientBottom
+    val bgColors = remember(isDark, topColor, upperMidColor, lowerMidColor, bottomColor) {
+        listOf(topColor, upperMidColor, lowerMidColor, bottomColor)
+    }
+
     Canvas(modifier = modifier.fillMaxSize()) {
         val w = size.width
         val h = size.height
@@ -72,24 +82,24 @@ fun QuantumFieldBackground(
         // 0. Lớp nền Gradient nhẹ từ trên xuống dưới (Top -> Bottom) rất dịu mắt
         drawRect(
             brush = Brush.verticalGradient(
-                colors = listOf(
-                    BgGradientTop,
-                    BgGradientUpperMid,
-                    BgGradientLowerMid,
-                    BgGradientBottom
-                ),
+                colors = bgColors,
                 startY = 0f,
                 endY = h
             ),
             size = size
         )
 
+        val purpleAlpha = if (isDark) 0.22f else 0.14f
+        val magentaAlpha = if (isDark) 0.12f else 0.06f
+        val cyanAlpha = if (isDark) 0.22f else 0.15f
+        val orbitAlpha = if (isDark) 0.28f else 0.16f
+
         // 1. Cực quang Tím Spin ở nửa trên màn hình
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    AccentPurple.copy(alpha = 0.14f),
-                    QuantumMagenta.copy(alpha = 0.06f),
+                    AccentPurple.copy(alpha = purpleAlpha),
+                    QuantumMagenta.copy(alpha = magentaAlpha),
                     Color.Transparent
                 ),
                 center = Offset(w * 0.22f, h * 0.10f),
@@ -103,8 +113,8 @@ fun QuantumFieldBackground(
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    AccentPurple.copy(alpha = 0.08f),
-                    QuantumCyan.copy(alpha = 0.09f),
+                    AccentPurple.copy(alpha = if (isDark) 0.14f else 0.08f),
+                    QuantumCyan.copy(alpha = if (isDark) 0.14f else 0.09f),
                     Color.Transparent
                 ),
                 center = Offset(w * 0.86f, h * 0.45f),
@@ -118,8 +128,8 @@ fun QuantumFieldBackground(
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    QuantumCyan.copy(alpha = 0.15f),
-                    AccentPurple.copy(alpha = 0.04f),
+                    QuantumCyan.copy(alpha = cyanAlpha),
+                    AccentPurple.copy(alpha = if (isDark) 0.08f else 0.04f),
                     Color.Transparent
                 ),
                 center = Offset(w * 0.30f, h * 0.88f),
@@ -132,9 +142,9 @@ fun QuantumFieldBackground(
         val dashEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 18f), 0f)
         val orbitBrush = Brush.linearGradient(
             colors = listOf(
-                AccentRed.copy(alpha = 0.16f),
-                QuantumMagenta.copy(alpha = 0.14f),
-                AccentPurple.copy(alpha = 0.18f)
+                AccentRed.copy(alpha = orbitAlpha),
+                QuantumMagenta.copy(alpha = orbitAlpha * 0.9f),
+                AccentPurple.copy(alpha = orbitAlpha * 1.1f)
             )
         )
 
@@ -654,8 +664,10 @@ fun QuantumSplashScreen(
             Spacer(modifier = Modifier.height(28.dp))
 
             // 2. Cụm Logo QuarkTube nguyên khối kèm sóng Equalizer nhấp nhô
+            val isDark = LocalThemeIsDark.current
+            val splashLogoRes = if (isDark) R.drawable.img_quarktube_logo_dark else R.drawable.img_quarktube_logo
             Image(
-                painter = painterResource(id = R.drawable.img_quarktube_logo),
+                painter = painterResource(id = splashLogoRes),
                 contentDescription = "QuarkTube Logo",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
@@ -743,6 +755,7 @@ fun QuantumWaveProgressBar(
     height: Dp = 4.dp
 ) {
     val clamped = progress.coerceIn(0f, 1f)
+    val trackColor = NeuDarkShadow.copy(alpha = 0.55f)
     Canvas(
         modifier = modifier
             .fillMaxWidth()
@@ -754,7 +767,7 @@ fun QuantumWaveProgressBar(
 
         // Rãnh nền lõm nhẹ
         drawLine(
-            color = NeuDarkShadow.copy(alpha = 0.55f),
+            color = trackColor,
             start = Offset(0f, cy),
             end = Offset(w, cy),
             strokeWidth = h,

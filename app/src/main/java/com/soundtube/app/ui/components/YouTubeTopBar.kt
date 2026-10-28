@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.soundtube.app.R
 import com.soundtube.app.ui.theme.AccentRed
+import com.soundtube.app.ui.theme.LocalThemeIsDark
 import com.soundtube.app.ui.theme.NeuIconButton
 import com.soundtube.app.ui.theme.TextSecondary
 
@@ -93,8 +94,10 @@ fun YouTubeTopBar(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         // Cụm Logo QuarkTube: bấm vào trả về Home + hiệu ứng Equalizer (|||) nhấp nhô trước chữ Tube
+        val isDark = LocalThemeIsDark.current
+        val logoRes = if (isDark) R.drawable.img_quarktube_logo_dark else R.drawable.img_quarktube_logo
         Image(
-            painter = painterResource(id = R.drawable.img_quarktube_logo),
+            painter = painterResource(id = logoRes),
             contentDescription = "QuarkTube Logo - Về trang chủ",
             contentScale = ContentScale.Fit,
             modifier = Modifier

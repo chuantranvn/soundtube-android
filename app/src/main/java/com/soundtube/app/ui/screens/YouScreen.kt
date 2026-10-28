@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.History
@@ -63,6 +64,8 @@ import com.soundtube.app.ui.theme.AccentRed
 import com.soundtube.app.ui.theme.DarkBackground
 import com.soundtube.app.ui.theme.DarkSurface
 import com.soundtube.app.ui.theme.DarkSurfaceVariant
+import com.soundtube.app.ui.theme.QuantumMagenta
+import com.soundtube.app.ui.theme.QuantumViolet
 import com.soundtube.app.ui.theme.TextMuted
 import com.soundtube.app.ui.theme.TextPrimary
 import com.soundtube.app.ui.theme.TextSecondary
@@ -76,8 +79,10 @@ fun YouScreen(
     userAvatar: String?,
     isAutoplayEnabled: Boolean,
     isSyncEnabled: Boolean,
+    isDarkMode: Boolean = false,
     onToggleAutoplay: () -> Unit,
     onToggleSync: () -> Unit,
+    onToggleDarkMode: () -> Unit = {},
     onPlaySong: (Song, List<Song>) -> Unit,
     onOpenLogin: () -> Unit,
     onLogout: () -> Unit,
@@ -412,6 +417,49 @@ fun YouScreen(
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
                             checkedTrackColor = AccentRed,
+                            uncheckedThumbColor = TextMuted,
+                            uncheckedTrackColor = DarkBackground
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.DarkMode,
+                            contentDescription = null,
+                            tint = if (isDarkMode) QuantumViolet else TextSecondary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "Giao diện tối (Dark mode)",
+                                color = TextPrimary,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp
+                            )
+                            Text(
+                                text = "Nền không gian lượng tử dịu mắt & tiết kiệm pin",
+                                color = TextSecondary,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = isDarkMode,
+                        onCheckedChange = { onToggleDarkMode() },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = QuantumMagenta,
                             uncheckedThumbColor = TextMuted,
                             uncheckedTrackColor = DarkBackground
                         )

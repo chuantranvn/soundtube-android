@@ -75,7 +75,8 @@ class MainActivity : ComponentActivity() {
         checkNotificationPermission()
 
         setContent {
-            SoundTubeTheme {
+            val isDarkMode by viewModel.isDarkMode.collectAsState()
+            SoundTubeTheme(darkTheme = isDarkMode) {
                 val selectedNavTab by viewModel.selectedNavTab.collectAsState()
                 val selectedCategory by viewModel.selectedCategory.collectAsState()
                 val isSearchActive by viewModel.isSearchActive.collectAsState()
@@ -113,7 +114,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // Điều khiển xoay ngang màn hình và ẩn thanh hệ thống khi xem Fullscreen
-                LaunchedEffect(isFullscreen, isTablet) {
+                LaunchedEffect(isFullscreen, isTablet, isDarkMode) {
                     val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
                     if (isFullscreen) {
                         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
@@ -134,8 +135,8 @@ class MainActivity : ComponentActivity() {
                             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                         }
                         windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
-                        windowInsetsController.isAppearanceLightStatusBars = true
-                        windowInsetsController.isAppearanceLightNavigationBars = true
+                        windowInsetsController.isAppearanceLightStatusBars = !isDarkMode
+                        windowInsetsController.isAppearanceLightNavigationBars = !isDarkMode
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                             window.attributes.layoutInDisplayCutoutMode =
                                 android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT
@@ -279,8 +280,10 @@ class MainActivity : ComponentActivity() {
                                             userAvatar = userAvatar,
                                             isAutoplayEnabled = isAutoplayEnabled,
                                             isSyncEnabled = isSyncEnabled,
+                                            isDarkMode = isDarkMode,
                                             onToggleAutoplay = viewModel::toggleAutoplay,
                                             onToggleSync = viewModel::toggleSync,
+                                            onToggleDarkMode = viewModel::toggleDarkMode,
                                             onPlaySong = viewModel::playSong,
                                             onOpenLogin = viewModel::openLoginSheet,
                                             onLogout = viewModel::logout,

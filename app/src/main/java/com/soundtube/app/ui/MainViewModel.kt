@@ -26,6 +26,11 @@ import kotlinx.coroutines.launch
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val audioManager = application.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private val prefs = application.getSharedPreferences("quarktube_settings", Context.MODE_PRIVATE)
+
+    // Chế độ Giao diện tối Lượng Tử (Quantum Dark Mode) - lưu vào SharedPreferences
+    private val _isDarkMode = MutableStateFlow(prefs.getBoolean("dark_mode", false))
+    val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
 
     // 1. Tab điều hướng đáy (Bottom Navigation Tab): HOME, SHORTS, CREATE, SUBSCRIPTIONS, YOU
     private val _selectedNavTab = MutableStateFlow(YouTubeNavTab.HOME)
@@ -563,6 +568,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun toggleAutoplay() {
         _isAutoplayEnabled.value = !_isAutoplayEnabled.value
+    }
+
+    fun toggleDarkMode() {
+        val newMode = !_isDarkMode.value
+        _isDarkMode.value = newMode
+        prefs.edit().putBoolean("dark_mode", newMode).apply()
     }
 
     fun toggleSync() {

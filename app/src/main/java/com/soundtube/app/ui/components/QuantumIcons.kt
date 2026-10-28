@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.soundtube.app.ui.theme.AccentPurple
 import com.soundtube.app.ui.theme.AccentRed
+import com.soundtube.app.ui.theme.LocalThemeIsDark
 import com.soundtube.app.ui.theme.TextMuted
 import com.soundtube.app.ui.theme.TextPrimary
 
@@ -25,21 +26,26 @@ import com.soundtube.app.ui.theme.TextPrimary
  * Bộ Icon Lượng Tử (Quantum Vector Icons) thiết kế riêng cho QuarkTube.
  * Kết hợp nét bo hình học hiện đại, vòng quỹ đạo elip nghiêng và hạt lượng tử (quark node) phát sáng.
  */
+@Composable
 private fun quantumBrush(active: Boolean): Brush =
     if (active) {
         Brush.linearGradient(
             colors = listOf(AccentRed, Color(0xFFD838B8), AccentPurple)
         )
     } else {
+        val secondary = if (LocalThemeIsDark.current) Color(0xFF8C86A5) else Color(0xFF6E7B91)
         Brush.linearGradient(
-            colors = listOf(TextMuted, Color(0xFF6E7B91))
+            colors = listOf(TextMuted, secondary)
         )
     }
 
-private fun quantumPrimaryBrush(): Brush =
-    Brush.linearGradient(
-        colors = listOf(TextPrimary, Color(0xFF374357))
+@Composable
+private fun quantumPrimaryBrush(): Brush {
+    val secondary = if (LocalThemeIsDark.current) Color(0xFF9F98B5) else Color(0xFF374357)
+    return Brush.linearGradient(
+        colors = listOf(TextPrimary, secondary)
     )
+}
 
 /**
  * 1. Icon Trang chủ Lượng Tử (Quantum Home):
@@ -52,6 +58,7 @@ fun QuantumHomeIcon(
     size: Dp = 24.dp
 ) {
     val brush = quantumBrush(isSelected)
+    val dotColor = if (isSelected) AccentRed else TextMuted
     Canvas(modifier = modifier.size(size)) {
         val w = this.size.width
         val h = this.size.height
@@ -98,7 +105,7 @@ fun QuantumHomeIcon(
         )
         // Hạt vệ tinh nhỏ trên đỉnh mái
         drawCircle(
-            color = if (isSelected) AccentRed else TextMuted,
+            color = dotColor,
             radius = w * 0.055f,
             center = Offset(w * 0.86f, h * 0.32f)
         )
@@ -116,6 +123,8 @@ fun QuantumShortsIcon(
     size: Dp = 24.dp
 ) {
     val brush = quantumBrush(isSelected)
+    val dotColor1 = if (isSelected) AccentRed else TextMuted
+    val dotColor2 = if (isSelected) AccentPurple else TextMuted
     Canvas(modifier = modifier.size(size)) {
         val w = this.size.width
         val h = this.size.height
@@ -154,12 +163,12 @@ fun QuantumShortsIcon(
 
         // 2 hạt Quark đối xứng
         drawCircle(
-            color = if (isSelected) AccentRed else TextMuted,
+            color = dotColor1,
             radius = w * 0.055f,
             center = Offset(w * 0.85f, h * 0.28f)
         )
         drawCircle(
-            color = if (isSelected) AccentPurple else TextMuted,
+            color = dotColor2,
             radius = w * 0.048f,
             center = Offset(w * 0.15f, h * 0.72f)
         )
@@ -177,6 +186,7 @@ fun QuantumSubscriptionsIcon(
     size: Dp = 24.dp
 ) {
     val brush = quantumBrush(isSelected)
+    val dotColor = if (isSelected) AccentRed else TextMuted
     Canvas(modifier = modifier.size(size)) {
         val w = this.size.width
         val h = this.size.height
@@ -218,7 +228,7 @@ fun QuantumSubscriptionsIcon(
 
         // Hạt lượng tử ở góc trên phải
         drawCircle(
-            color = if (isSelected) AccentRed else TextMuted,
+            color = dotColor,
             radius = w * 0.055f,
             center = Offset(w * 0.86f, h * 0.20f)
         )
