@@ -75,50 +75,52 @@ fun Modifier.neumorphic(
         addOutline(outline)
     }
 
-    // Bề mặt trắng ngọc trai pha sắc Hồng Phấn - Tím Oải Hương lượng tử
+    // Bề mặt khối nổi 3D Neumorphic rõ nét
     val raisedSurfaceBrush = Brush.linearGradient(
         colors = listOf(
-            Color(0xFFFEFAFD),
+            Color(0xFFFFFFFF),
             color,
-            Color(0xFFEBE2F6)
+            Color(0xFFE0E7F5)
         ),
         start = Offset.Zero,
         end = Offset(size.width, size.height)
     )
 
-    // Lớp phủ ánh sáng giao thoa lượng tử cực mịn trên bề mặt khối nổi (Hồng -> Tím, không dùng Cyan)
+    // Lớp phủ ánh sáng giao thoa lượng tử cực mịn trên bề mặt
     val iridescentSheenBrush = Brush.linearGradient(
         colors = listOf(
-            AccentRed.copy(alpha = if (quantumGlow) 0.08f else 0.03f),
-            QuantumMagenta.copy(alpha = if (quantumGlow) 0.07f else 0.025f),
-            AccentPurple.copy(alpha = if (quantumGlow) 0.08f else 0.03f)
+            AccentRed.copy(alpha = if (quantumGlow) 0.06f else 0.02f),
+            AccentPurple.copy(alpha = if (quantumGlow) 0.06f else 0.02f),
+            QuantumCyan.copy(alpha = if (quantumGlow) 0.06f else 0.02f)
         ),
         start = Offset(0f, size.height),
         end = Offset(size.width, 0f)
     )
 
-    // Bề mặt giếng năng lượng lõm (pressed well)
+    // Bề mặt giếng lõm 3D Neumorphic (độ tương phản lòng lõm rõ ràng, không cần viền)
     val pressedSurfaceBrush = Brush.linearGradient(
         colors = listOf(
-            Color(0xFFE3DAF0),
-            Color(0xFFEEE7F8),
-            Color(0xFFFAF6FE)
+            Color(0xFFD5DFEE),
+            Color(0xFFE6EDF8),
+            Color(0xFFFBFDFF)
         ),
         start = Offset.Zero,
         end = Offset(size.width, size.height)
     )
 
+    val deepDarkPaint = shadowPaint(Color(0xFFB3C1D8))
+
     onDrawWithContent {
         if (!pressed) {
             if (supportsBlur) {
                 drawIntoCanvas { canvas ->
-                    translate(-offsetPx * 0.85f, -offsetPx * 0.85f) {
+                    translate(-offsetPx * 0.9f, -offsetPx * 0.9f) {
                         canvas.nativeCanvas.drawPath(path.asAndroidPath(), lightPaint)
                     }
-                    translate(offsetPx, offsetPx) {
+                    translate(offsetPx * 1.05f, offsetPx * 1.05f) {
                         canvas.nativeCanvas.drawPath(
                             path.asAndroidPath(),
-                            if (quantumGlow) quantumShadowPaint else darkPaint
+                            if (quantumGlow) quantumShadowPaint else deepDarkPaint
                         )
                     }
                 }
@@ -126,40 +128,41 @@ fun Modifier.neumorphic(
             drawPath(path, brush = raisedSurfaceBrush)
             drawPath(path, brush = iridescentSheenBrush)
 
-            // Viền khúc xạ lăng kính lượng tử (Quantum Prismatic Specular Rim: Trắng -> Hồng -> Tím)
-            drawPath(
-                path,
-                brush = Brush.linearGradient(
-                    if (quantumGlow) {
-                        listOf(
-                            Color.White.copy(alpha = 0.95f),
-                            AccentRed.copy(alpha = 0.48f),
-                            QuantumMagenta.copy(alpha = 0.42f),
-                            AccentPurple.copy(alpha = 0.48f)
-                        )
-                    } else {
-                        listOf(
-                            Color.White.copy(alpha = 0.95f),
-                            Color.White.copy(alpha = 0.55f),
-                            AccentRed.copy(alpha = 0.16f),
-                            AccentPurple.copy(alpha = 0.20f)
-                        )
-                    },
-                    start = Offset.Zero,
-                    end = Offset(size.width, size.height)
-                ),
-                style = Stroke(width = (borderWidth ?: if (quantumGlow) 1.15.dp else 0.95.dp).toPx())
-            )
+            // Chỉ vẽ viền khi borderWidth được truyền vào > 0.dp
+            val raisedBorderDp = borderWidth ?: if (quantumGlow) 1.1.dp else 0.dp
+            if (raisedBorderDp > 0.dp) {
+                drawPath(
+                    path,
+                    brush = Brush.linearGradient(
+                        if (quantumGlow) {
+                            listOf(
+                                Color.White.copy(alpha = 0.95f),
+                                AccentRed.copy(alpha = 0.45f),
+                                AccentPurple.copy(alpha = 0.45f),
+                                QuantumCyan.copy(alpha = 0.45f)
+                            )
+                        } else {
+                            listOf(
+                                Color.White.copy(alpha = 0.90f),
+                                AccentPurple.copy(alpha = 0.18f)
+                            )
+                        },
+                        start = Offset.Zero,
+                        end = Offset(size.width, size.height)
+                    ),
+                    style = Stroke(width = raisedBorderDp.toPx())
+                )
+            }
         } else {
             drawPath(path, brush = pressedSurfaceBrush)
             drawPath(path, brush = iridescentSheenBrush)
             if (supportsBlur) {
                 clipPath(path) {
                     drawIntoCanvas { canvas ->
-                        translate(offsetPx * 0.7f, offsetPx * 0.7f) {
-                            canvas.nativeCanvas.drawPath(ringPath.asAndroidPath(), darkPaint)
+                        translate(offsetPx * 0.85f, offsetPx * 0.85f) {
+                            canvas.nativeCanvas.drawPath(ringPath.asAndroidPath(), deepDarkPaint)
                         }
-                        translate(-offsetPx * 0.7f, -offsetPx * 0.7f) {
+                        translate(-offsetPx * 0.85f, -offsetPx * 0.85f) {
                             canvas.nativeCanvas.drawPath(ringPath.asAndroidPath(), lightPaint)
                         }
                     }
@@ -167,27 +170,30 @@ fun Modifier.neumorphic(
             } else {
                 drawPath(path, Color(0x18000000))
             }
-            // Viền năng lượng lượng tử mảnh tinh tế cho ô đang được chọn / nhấn (Hồng -> Tím)
-            drawPath(
-                path,
-                brush = Brush.linearGradient(
-                    listOf(
-                        AccentRed.copy(alpha = 0.40f),
-                        QuantumMagenta.copy(alpha = 0.35f),
-                        AccentPurple.copy(alpha = 0.40f)
+            // Chỉ vẽ viền khi borderWidth được truyền vào > 0.dp (mặc định 0.dp cho nút/icon lõm)
+            val pressedBorderDp = borderWidth ?: 0.dp
+            if (pressedBorderDp > 0.dp) {
+                drawPath(
+                    path,
+                    brush = Brush.linearGradient(
+                        listOf(
+                            AccentRed.copy(alpha = 0.40f),
+                            QuantumMagenta.copy(alpha = 0.35f),
+                            AccentPurple.copy(alpha = 0.40f)
+                        ),
+                        start = Offset.Zero,
+                        end = Offset(size.width, size.height)
                     ),
-                    start = Offset.Zero,
-                    end = Offset(size.width, size.height)
-                ),
-                style = Stroke(width = (borderWidth ?: 0.8.dp).toPx())
-            )
+                    style = Stroke(width = pressedBorderDp.toPx())
+                )
+            }
         }
         drawContent()
     }
 }
 
 /**
- * Nút neumorphic lượng tử: nổi khi bình thường, lõm xuống kèm viền lăng kính khi nhấn hoặc [selected].
+ * Nút neumorphic lượng tử: nổi 3D khi bình thường, lõm 3D xuống khi nhấn hoặc [selected] (mặc định không viền).
  */
 @Composable
 fun NeuButton(
@@ -197,6 +203,7 @@ fun NeuButton(
     elevation: Dp = 4.dp,
     selected: Boolean = false,
     quantumGlow: Boolean = false,
+    borderWidth: Dp? = 0.dp,
     color: Color = NeuBase,
     content: @Composable () -> Unit
 ) {
@@ -210,6 +217,7 @@ fun NeuButton(
                 elevation = elevation,
                 pressed = isPressed || selected,
                 quantumGlow = quantumGlow || selected,
+                borderWidth = borderWidth,
                 color = color
             )
             .clip(shape)
@@ -219,7 +227,7 @@ fun NeuButton(
     }
 }
 
-/** Nút tròn neumorphic lượng tử kích thước cố định. */
+/** Nút tròn icon neumorphic nổi bật không viền. */
 @Composable
 fun NeuIconButton(
     onClick: () -> Unit,
@@ -228,6 +236,7 @@ fun NeuIconButton(
     elevation: Dp = 4.dp,
     selected: Boolean = false,
     quantumGlow: Boolean = false,
+    borderWidth: Dp? = 0.dp,
     content: @Composable () -> Unit
 ) {
     NeuButton(
@@ -237,6 +246,7 @@ fun NeuIconButton(
         elevation = elevation,
         selected = selected,
         quantumGlow = quantumGlow,
+        borderWidth = borderWidth,
         content = content
     )
 }

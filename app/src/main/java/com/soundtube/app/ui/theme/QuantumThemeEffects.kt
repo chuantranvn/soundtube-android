@@ -84,49 +84,49 @@ fun QuantumFieldBackground(
             size = size
         )
 
-        // 1. Cực quang hạt Quark Hồng ở góc trên trái (dưới logo)
+        // 1. Cực quang Tím Spin ở nửa trên màn hình
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    AccentRed.copy(alpha = 0.11f),
-                    QuantumMagenta.copy(alpha = 0.05f),
+                    AccentPurple.copy(alpha = 0.14f),
+                    QuantumMagenta.copy(alpha = 0.06f),
                     Color.Transparent
                 ),
-                center = Offset(w * 0.18f, h * 0.08f),
-                radius = w * 0.58f
-            ),
-            radius = w * 0.58f,
-            center = Offset(w * 0.18f, h * 0.08f)
-        )
-
-        // 2. Cực quang Tím Hồng Giao Thoa ở cạnh phải giữa màn hình
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    QuantumMagenta.copy(alpha = 0.10f),
-                    AccentPurple.copy(alpha = 0.05f),
-                    Color.Transparent
-                ),
-                center = Offset(w * 0.88f, h * 0.42f),
+                center = Offset(w * 0.22f, h * 0.10f),
                 radius = w * 0.62f
             ),
             radius = w * 0.62f,
-            center = Offset(w * 0.88f, h * 0.42f)
+            center = Offset(w * 0.22f, h * 0.10f)
         )
 
-        // 3. Cực quang Tím Spin ở góc dưới trái (gần thanh điều hướng)
+        // 2. Cực quang giao thoa Tím -> Cyan ở giữa màn hình
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    AccentPurple.copy(alpha = 0.12f),
-                    AccentRed.copy(alpha = 0.04f),
+                    AccentPurple.copy(alpha = 0.08f),
+                    QuantumCyan.copy(alpha = 0.09f),
                     Color.Transparent
                 ),
-                center = Offset(w * 0.25f, h * 0.88f),
-                radius = w * 0.60f
+                center = Offset(w * 0.86f, h * 0.45f),
+                radius = w * 0.64f
             ),
-            radius = w * 0.60f,
-            center = Offset(w * 0.25f, h * 0.88f)
+            radius = w * 0.64f,
+            center = Offset(w * 0.86f, h * 0.45f)
+        )
+
+        // 3. Cực quang Xanh Cyan Lượng Tử ở nửa dưới màn hình
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(
+                    QuantumCyan.copy(alpha = 0.15f),
+                    AccentPurple.copy(alpha = 0.04f),
+                    Color.Transparent
+                ),
+                center = Offset(w * 0.30f, h * 0.88f),
+                radius = w * 0.65f
+            ),
+            radius = w * 0.65f,
+            center = Offset(w * 0.30f, h * 0.88f)
         )
 
         val dashEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 18f), 0f)

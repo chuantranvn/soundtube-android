@@ -268,11 +268,12 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Nút Nguyên tử Lượng tử / Khám phá
+            // Nút Nguyên tử Lượng tử / Khám phá (nổi bật không viền)
             NeuButton(
                 onClick = { onCategorySelected("Tất cả") },
                 shape = RoundedCornerShape(12.dp),
                 elevation = 3.dp,
+                borderWidth = 0.dp,
                 modifier = Modifier.size(36.dp)
             ) {
                 QuantumExploreIcon(size = 20.dp)
